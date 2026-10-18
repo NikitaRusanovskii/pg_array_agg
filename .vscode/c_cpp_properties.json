@@ -1,0 +1,19 @@
+
+{
+    "configurations": [
+        {
+            "name": "PostgreSQL-17-11",
+            "compilerPath": "/usr/bin/gcc",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "c17",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/admin/PostgresRepo/Build/PostgreSQL_17_11/include",
+                "/home/admin/PostgresRepo/Build/PostgreSQL_17_11/include/postgresql/server",
+                "/home/admin/PostgresRepo/Build/PostgreSQL_17_11/include/postgresql/server/port",
+                "/home/admin/PostgresRepo/Build/PostgreSQL_17_11/include/postgresql/internal"
+            ]
+        }
+    ],
+    "version": 4
+}
