@@ -1,36 +1,76 @@
 diff -U3 /home/admin/pg_array_agg/test/expected/array_agg_functions.out /home/admin/pg_array_agg/test/results/array_agg_functions.out
---- /home/admin/pg_array_agg/test/expected/array_agg_functions.out	2026-10-18 12:20:02.940355991 +0300
-+++ /home/admin/pg_array_agg/test/results/array_agg_functions.out	2026-10-19 09:57:24.846812024 +0300
-@@ -55,3 +55,32 @@
+--- /home/admin/pg_array_agg/test/expected/array_agg_functions.out	2026-10-19 15:02:51.922572603 +0300
++++ /home/admin/pg_array_agg/test/results/array_agg_functions.out	2026-10-19 17:18:57.677407698 +0300
+@@ -119,4 +119,72 @@
+ (1 row)
  
- -- ДОЛЖНЫ ВЕРНУТЬ NULL
  -- НЕКОРРЕКТНЫЕ
-+-- ТЕСТЫ array_avg:
++-- ТЕСТЫ array_min:
 +-- КОРРЕКТНЫЕ
-+SELECT array_avg(ARRAY[1,2,3,4]);
-+     array_avg      
-+--------------------
-+ 2.5000000000000000
++SELECT array_min(ARRAY[1,2,3,4]);
++ array_min 
++-----------
++         1
 +(1 row)
 +
-+SELECT array_avg(ARRAY[1, 1]);
-+       array_avg        
-+------------------------
-+ 1.00000000000000000000
++SELECT array_min(ARRAY[1, 1]);
++ array_min 
++-----------
++         1
 +(1 row)
 +
-+SELECT array_avg(ARRAY[2]);
-+     array_avg      
-+--------------------
-+ 2.0000000000000000
++SELECT array_min(ARRAY[2]);
++ array_min 
++-----------
++         2
++(1 row)
++
++SELECT array_min('{2.3, 2.4, 2.3}'::real[]);
++ array_min 
++-----------
++       2.3
++(1 row)
++
++SELECT array_min('{2.3, 2.4, 2.3}'::numeric[]);
++ array_min 
++-----------
++       2.3
 +(1 row)
 +
 +-- ДОЛЖНЫ ВЕРНУТЬ NULL
-+SELECT array_avg('{}'::integer[]);
-+ array_avg 
++-- НЕКОРРЕКТНЫЕ
++-- ТЕСТЫ array_max:
++-- КОРРЕКТНЫЕ
++SELECT array_max(ARRAY[1,2,3,4]);
++ array_max 
 +-----------
-+          
++         4
 +(1 row)
 +
++SELECT array_max(ARRAY[1, 1]);
++ array_max 
++-----------
++         1
++(1 row)
++
++SELECT array_max(ARRAY[2]);
++ array_max 
++-----------
++         2
++(1 row)
++
++SELECT array_max('{2.3, 2.4, 2.3}'::real[]);
++ array_max 
++-----------
++       2.4
++(1 row)
++
++SELECT array_max('{2.3, 2.4, 2.3}'::numeric[]);
++ array_max 
++-----------
++       2.4
++(1 row)
++
++-- ДОЛЖНЫ ВЕРНУТЬ NULL
 +-- НЕКОРРЕКТНЫЕ
-+DROP EXTENSION IF EXISTS pg_array_agg;
+ DROP EXTENSION IF EXISTS pg_array_agg;

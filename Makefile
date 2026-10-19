@@ -1,10 +1,10 @@
 EXTENSION = pg_array_agg
 
-DATA = sql/pg_array_agg--1.0.sql
+DATA = pg_array_agg--1.0.sql
 
 MODULE_big = pg_array_agg
 
-OBJS = src/array_functions.o
+OBJS = src/array_functions.o src/pg_array_utils.o
 
 REGRESS = array_agg_functions
 REGRESS_OPTS = --inputdir=test --outputdir=test

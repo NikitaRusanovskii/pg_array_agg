@@ -14,3 +14,13 @@ CREATE FUNCTION array_avg(arr anyarray)
 RETURNS numeric
 AS 'MODULE_PATHNAME', 'array_avg'
 LANGUAGE C STRICT IMMUTABLE;
+
+CREATE FUNCTION array_min(arr anyarray)
+RETURNS anyelement
+AS 'MODULE_PATHNAME', 'array_min'
+LANGUAGE C STRICT IMMUTABLE;
+
+CREATE FUNCTION array_max(arr anyarray)
+RETURNS anyelement
+AS 'MODULE_PATHNAME', 'array_max'
+LANGUAGE C STRICT IMMUTABLE;
