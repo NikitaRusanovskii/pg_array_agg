@@ -1,0 +1,36 @@
+diff -U3 /home/admin/pg_array_agg/test/expected/array_agg_functions.out /home/admin/pg_array_agg/test/results/array_agg_functions.out
+--- /home/admin/pg_array_agg/test/expected/array_agg_functions.out	2026-10-18 12:20:02.940355991 +0300
++++ /home/admin/pg_array_agg/test/results/array_agg_functions.out	2026-10-19 09:57:24.846812024 +0300
+@@ -55,3 +55,32 @@
+ 
+ -- ДОЛЖНЫ ВЕРНУТЬ NULL
+ -- НЕКОРРЕКТНЫЕ
++-- ТЕСТЫ array_avg:
++-- КОРРЕКТНЫЕ
++SELECT array_avg(ARRAY[1,2,3,4]);
++     array_avg      
++--------------------
++ 2.5000000000000000
++(1 row)
++
++SELECT array_avg(ARRAY[1, 1]);
++       array_avg        
++------------------------
++ 1.00000000000000000000
++(1 row)
++
++SELECT array_avg(ARRAY[2]);
++     array_avg      
++--------------------
++ 2.0000000000000000
++(1 row)
++
++-- ДОЛЖНЫ ВЕРНУТЬ NULL
++SELECT array_avg('{}'::integer[]);
++ array_avg 
++-----------
++          
++(1 row)
++
++-- НЕКОРРЕКТНЫЕ
++DROP EXTENSION IF EXISTS pg_array_agg;

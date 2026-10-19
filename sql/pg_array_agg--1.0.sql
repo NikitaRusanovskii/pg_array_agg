@@ -9,3 +9,8 @@ CREATE FUNCTION array_sum(arr anyarray)
 RETURNS numeric
 AS 'MODULE_PATHNAME', 'array_sum'
 LANGUAGE C STRICT IMMUTABLE;
+
+CREATE FUNCTION array_avg(arr anyarray)
+RETURNS numeric
+AS 'MODULE_PATHNAME', 'array_avg'
+LANGUAGE C STRICT IMMUTABLE;

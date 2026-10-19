@@ -17,7 +17,10 @@ void _PG_fini(void) {}
     Вспомогательные функции потом вынести в utils:
 */
 
-bool type_is_expected(Oid type_oid, Oid* expected_types, uint32 len) {
+extern Datum float4_numeric(PG_FUNCTION_ARGS);
+extern Datum float8_numeric(PG_FUNCTION_ARGS);
+
+static bool type_is_expected(Oid type_oid, Oid* expected_types, uint32 len) {
     for(int i = 0; i < len; i++) {
         if (expected_types[i] == type_oid) return true;
     }
@@ -36,16 +39,16 @@ static inline Numeric datum_to_numeric(Datum element, Oid type_oid) {
         case INT8OID:
             tmp = int64_to_numeric((int64)DatumGetInt64(element));
             break;
-        /*
+        
         case FLOAT4OID: // как привести числа с плавающей точкой к numeric?
-            tmp 
+            tmp = Float4GetDatum(DirectFunctionCall1(float4_numeric, DatumGetFloat4(element)));
             break;
         case FLOAT8OID:
+            tmp = Float4GetDatum(DirectFunctionCall1(float4_numeric, DatumGetFloat4(element)));
             break;
-        */
         case NUMERICOID:
             tmp = DatumGetNumeric(element);
-            break;
+            break; 
         default:
             ereport(ERROR, errcode(ERRCODE_WRONG_OBJECT_TYPE),
                 errmsg("The function does not support this OID: %d", type_oid));
@@ -62,11 +65,11 @@ Datum array_product(PG_FUNCTION_ARGS) {
     
     ArrayType *arr = PG_GETARG_ARRAYTYPE_P(0);
     
-    if (arr->ndim > 1) {
+    if (ARR_NDIM(arr) > 1) {
         ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-            errmsg("Invalid ndim of array: %d", arr->ndim));
+            errmsg("Invalid ndim of array: %d", ARR_NDIM(arr)));
     }
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID}; // они должны совпадать с функцией валидатором. Это небезопасно с точки зрения рефакторинга. Надо уединить их в одном месте
     if (!type_is_expected(arr->elemtype, expected_types, 6)) {
         ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
             errmsg("Invalid elemtype of array. OID: %d", arr->elemtype));
@@ -87,7 +90,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
             array_free_iterator(arr_it);
             PG_RETURN_NULL();
         }
-        res = numeric_mul_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err);
+        res = numeric_mul_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
         if(err) ereport(ERROR, errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
             errmsg("An error occurred during a numeric multiplication. A variable overflow likely took place."));
 
@@ -107,9 +110,9 @@ Datum array_sum(PG_FUNCTION_ARGS) {
     
     ArrayType *arr = PG_GETARG_ARRAYTYPE_P(0);
     
-    if (arr->ndim > 1) {
+    if (ARR_NDIM(arr) > 1) {
         ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-            errmsg("Invalid ndim of array: %d", arr->ndim));
+            errmsg("Invalid ndim of array: %d", ARR_NDIM(arr)));
     }
     Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
     if (!type_is_expected(arr->elemtype, expected_types, 6)) {
@@ -132,7 +135,7 @@ Datum array_sum(PG_FUNCTION_ARGS) {
             PG_RETURN_NULL();
         }
 
-        res = numeric_add_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err);
+        res = numeric_add_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
         if(err) ereport(ERROR, errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
             errmsg("An error occurred during a numeric sum. A variable overflow likely took place."));
 
@@ -140,5 +143,107 @@ Datum array_sum(PG_FUNCTION_ARGS) {
 
     array_free_iterator(arr_it);
 
+    PG_RETURN_NUMERIC(res);
+}
+
+
+PG_FUNCTION_INFO_V1(array_avg);
+Datum array_avg(PG_FUNCTION_ARGS) {
+    if (PG_NARGS() == 0) PG_RETURN_NULL();
+    if (PG_NARGS() > 1) ereport(ERROR, errcode(ERRCODE_TOO_MANY_ARGUMENTS),
+    errmsg("To many arguments: %d, functions need: %d", PG_NARGS(), 1));
+    
+    ArrayType *arr = PG_GETARG_ARRAYTYPE_P(0);
+    
+    if (ARR_NDIM(arr) > 1) {
+        ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+            errmsg("Invalid ndim of array: %d", ARR_NDIM(arr)));
+    }
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    if (!type_is_expected(arr->elemtype, expected_types, 6)) {
+        ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+            errmsg("Invalid elemtype of array. OID: %d", arr->elemtype));
+    }
+
+    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0) PG_RETURN_NULL();
+
+    ArrayIterator arr_it = array_create_iterator(arr, 0, NULL);
+
+    // для итератора
+    Datum elem;
+    bool is_null;
+    //результирующая переменная, тут накопим результат сложений. Инициализируем её значением 0
+    Numeric res = int64_to_numeric(0);
+    Numeric count = int64_to_numeric(0); // будем считать кол-во элементов самостоятельно, так как если изменится поведение относительно NULL элементов, ручной подсчёт более гибкий
+    bool err = false;
+    while(array_iterate(arr_it, &elem, &is_null)) {
+
+        if (is_null) {
+            array_free_iterator(arr_it);
+            PG_RETURN_NULL();
+        }
+        res = numeric_add_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
+        if(err) ereport(ERROR, errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+            errmsg("An error occurred during a numeric sum. A variable overflow likely took place."));
+        count = numeric_add_opt_error(count, int64_to_numeric(1), &err); // есть ли способ проще? инкремент?
+        if(err) ereport(ERROR, errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+            errmsg("An error occurred during a numeric sum. A variable overflow likely took place."));
+    }
+
+    array_free_iterator(arr_it);
+    res = numeric_div_opt_error(res, count, &err);
+    if (err) ereport(ERROR, errcode(ERRCODE_DIVISION_BY_ZERO),
+                    errmsg("Division by zero error"));
+    PG_RETURN_NUMERIC(res);
+}
+
+
+PG_FUNCTION_INFO_V1(array_min);
+Datum array_min(PG_FUNCTION_ARGS) {
+    if (PG_NARGS() == 0) PG_RETURN_NULL();
+    if (PG_NARGS() > 1) ereport(ERROR, errcode(ERRCODE_TOO_MANY_ARGUMENTS),
+    errmsg("To many arguments: %d, functions need: %d", PG_NARGS(), 1));
+    
+    ArrayType *arr = PG_GETARG_ARRAYTYPE_P(0);
+    
+    if (ARR_NDIM(arr) > 1) {
+        ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+            errmsg("Invalid ndim of array: %d", ARR_NDIM(arr)));
+    }
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    if (!type_is_expected(arr->elemtype, expected_types, 6)) {
+        ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+            errmsg("Invalid elemtype of array. OID: %d", arr->elemtype));
+    }
+
+    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0) PG_RETURN_NULL();
+
+    ArrayIterator arr_it = array_create_iterator(arr, 0, NULL);
+
+    // для итератора
+    Datum elem;
+    bool is_null;
+    //результирующая переменная, тут накопим результат сложений. Инициализируем её значением 0
+    Numeric res = int64_to_numeric(0);
+    Numeric count = int64_to_numeric(0); // будем считать кол-во элементов самостоятельно, так как если изменится поведение относительно NULL элементов, ручной подсчёт более гибкий
+    bool err = false;
+    while(array_iterate(arr_it, &elem, &is_null)) {
+
+        if (is_null) {
+            array_free_iterator(arr_it);
+            PG_RETURN_NULL();
+        }
+        res = numeric_add_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
+        if(err) ereport(ERROR, errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+            errmsg("An error occurred during a numeric sum. A variable overflow likely took place."));
+        count = numeric_add_opt_error(count, int64_to_numeric(1), &err); // есть ли способ проще? инкремент?
+        if(err) ereport(ERROR, errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+            errmsg("An error occurred during a numeric sum. A variable overflow likely took place."));
+    }
+
+    array_free_iterator(arr_it);
+    res = numeric_div_opt_error(res, count, &err);
+    if (err) ereport(ERROR, errcode(ERRCODE_DIVISION_BY_ZERO),
+                    errmsg("Division by zero error"));
     PG_RETURN_NUMERIC(res);
 }
