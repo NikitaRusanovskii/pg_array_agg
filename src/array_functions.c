@@ -245,3 +245,49 @@ Datum array_max(PG_FUNCTION_ARGS) {
     array_free_iterator(arr_it);
     PG_RETURN_DATUM(res);
 }
+
+
+PG_FUNCTION_INFO_V1(array_count);
+Datum array_count(PG_FUNCTION_ARGS) {
+    if (PG_NARGS() == 0) PG_RETURN_NULL();
+    if (PG_NARGS() > 1) ereport(ERROR, errcode(ERRCODE_TOO_MANY_ARGUMENTS),
+    errmsg("To many arguments: %d, functions need: %d", PG_NARGS(), 1));
+    
+    ArrayType *arr = PG_GETARG_ARRAYTYPE_P(0);
+    
+    if (ARR_NDIM(arr) > 1) {
+        ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+            errmsg("Invalid ndim of array: %d", ARR_NDIM(arr)));
+    }
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    if (!type_is_expected(arr->elemtype, expected_types, 6)) {
+        ereport(ERROR, errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+            errmsg("Invalid elemtype of array. OID: %d", arr->elemtype));
+    }
+
+    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0) PG_RETURN_NULL();
+    ArrayIterator arr_it = array_create_iterator(arr, 0, NULL);
+
+    // для итератора
+    Datum elem;
+    Datum res;
+    bool is_null = false;
+    bool is_first = true;
+    while(array_iterate(arr_it, &elem, &is_null)) {
+
+        if (is_null) {
+            array_free_iterator(arr_it);
+            PG_RETURN_NULL();
+        }
+        if (is_first){
+            res = elem;
+            is_first = false;
+        }
+
+        if (universal_cmp(arr->elemtype, res, elem) > 0) res = elem;
+
+    }
+
+    array_free_iterator(arr_it);
+    PG_RETURN_DATUM(res);
+}
