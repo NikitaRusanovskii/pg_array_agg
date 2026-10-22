@@ -4,7 +4,7 @@ DATA = pg_array_agg--1.0.sql
 
 MODULE_big = pg_array_agg
 
-OBJS = src/array_functions.o src/pg_array_utils.o
+OBJS = src/pg_array_agg.o
 
 REGRESS = array_agg_functions
 REGRESS_OPTS = --inputdir=test --outputdir=test
