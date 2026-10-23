@@ -1,7 +1,12 @@
 #include "postgres.h"
 #include "fmgr.h"
+#include "utils/builtins.h"
+#include "utils/lsyscache.h"
+#include "utils/numeric.h"
 #include "utils/array.h"
 #include "regex/regex.h"
+#include "catalog/pg_type_d.h"
+#include "utils/fmgrprotos.h"
 
 Datum array_product(PG_FUNCTION_ARGS);							
 Datum array_sum(PG_FUNCTION_ARGS);								
@@ -15,9 +20,9 @@ Datum array_any(PG_FUNCTION_ARGS);
 Datum array_none(PG_FUNCTION_ARGS);
 
 typedef enum {
-    ONE_OP,
-    TWO_OP
-} predicate_type;
+    CMP,
+    MOD
+} PredicateType;
 
 typedef enum {
     EQ, // ==
@@ -28,84 +33,49 @@ typedef enum {
     LEE, // <=
     MOD, // %
     SEQ, // = (short equal)
-} operator;
+} Operator;
+
+bool type_is_expected(Oid type_oid, Oid* expected_types, uint32 len) {
+    for (int i = 0; i < len; i++) {
+        if (expected_types[i] == type_oid) return true;
+    }
+    return false;
+}
+
+Datum string_to_datum(char* str, int len, Oid target_oid) {
+    Oid input;
+    Oid param;
+    Datum res;
+    char* str_ = pnstrdup(str, len);
+    getTypeInputInfo(target_oid, &input, &param);
+    res = OidInputFunctionCall(input, str_, param, -1);
+    pfree(str_);
+    return res;
+}
+
 
 typedef struct {
-    Oid operand_type;
-    text* varname;
-    operator operator1;
-    text* const1;
-    operator operator2;
-    text* const2;
-    predicate_type pt;
-} predicate;
+   PredicateType predicate_type;
+   Operator op;
+   text* const1;
+   text* const2;
 
-bool parse_predicate(predicate* p, text* predicate_expr, Oid collid) {
-    const char *parse_pattern = "^([A-Za-z]+)[[:space:]]*(<=|>=|==|!=|<|>|%)[[:space:]]*"
-    "('(?:NaN|Infinity|-Infinity)'|\\\"(?:[^\\\"]|\\\"\\\")*\\\"|[+-]?"
-    "(?:[0-9]+(?:[.][0-9]*)?|[.][0-9]+)(?:[eE][+-]?[0-9]+)?)(?:[[:space:]]*(=)[[:space:]]*"
-    "('(?:NaN|Infinity|-Infinity)'|\\\""
-    "(?:[^\\\"]|\\\"\\\")*\\\"|[+-]?(?:[0-9]+"
-    "(?:[.][0-9]*)?|[.][0-9]+)(?:[eE][+-]?[0-9]+)?))?$";
-    regmatch_t matched[6];
-    text* regexpr_text = cstring_to_text(parse_pattern);
-    memset(p, 0, sizeof(*p)); // зануляем структуру
-    if (!RE_compile_and_execute(regexpr_text, VARDATA_ANY(predicate_expr), VARSIZE_ANY_EXHDR(predicate_expr) ,REG_ADVANCED,
-        collid,lengthof(matched), matched)) {
-            pfree(regexpr_text);
-            return false;
-        }
+} ParsedPredicate;
 
-    pfree(regexpr_text);
+typedef struct {
+    PredicateType predicate_type;
+    Operator op;
+    Oid target_oid;
 
-    p->pt = ONE_OP;
-    #define EXTRACT(dst, ind) \
-    do { \
-        if (matched[ind].rm_so >= 0) \
-            (dst) = cstring_to_text_with_len( \
-                VARDATA_ANY(predicate_expr) + matched[ind].rm_so, \
-                matched[ind].rm_eo - matched[ind].rm_so); \
-    } while (0)
-    EXTRACT(p->varname, 1);
-    EXTRACT(p->const1, 3);
-    if (matched[4].rm_so >= 0) {
-        p->pt = TWO_OP;
-        EXTRACT(p->const2, 5);
-        p->operator2 = SEQ;
-    }
-    #undef EXTRACT
+    Datum const1;
+    Datum const2;
+} Predicate;
+// лексический разбор
+// синтаксический разбор
+// проверить структуру предиката
+// проверить допустимость операций
+// привести предикат к нужному виду
 
-    char* opstr = pnstrdup(VARDATA_ANY(predicate_expr) + matched[2].rm_so,
-                            matched[2].rm_eo - matched[2].rm_so);
-
-    if (strcmp(opstr, "==") == 0) {
-        p->operator1 = EQ;
-    }
-    else if (strcmp(opstr, "!=") == 0) {
-        p->operator1 = NEQ;
-    }
-    else if (strcmp(opstr, ">") == 0) {
-        p->operator1 = GR;
-    }
-    else if (strcmp(opstr, "<") == 0) {
-        p->operator1 = LE;
-    }
-    else if (strcmp(opstr, "<=") == 0) {
-        p->operator1 = LEE;
-    }
-    else if (strcmp(opstr, ">=") == 0) {
-        p->operator1 = GRE;
-    }
-    else if (strcmp(opstr, "%") == 0) {
-        p->operator1 = MOD;
-    }
-    else {
-        //error
-    }
-
-    pfree(opstr);
-    return true;
-}
 
 PG_FUNCTION_INFO_V1(array_count_if);
 Datum array_count_if(PG_FUNCTION_ARGS) {
