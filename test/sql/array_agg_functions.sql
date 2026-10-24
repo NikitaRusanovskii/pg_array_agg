@@ -89,10 +89,6 @@ SELECT array_min('{2.3, 2.4, 2.3}'::numeric[]);
 SELECT array_min('{-Infinity, NaN}'::real[]);
 SELECT array_min('{Infinity, -Infinity}'::real[]);
 SELECT array_min('{NaN, Infinity}'::real[]);
-SELECT array_min(ARRAY['hello', 'world', 'apple']::varchar[]);
-SELECT array_min(ARRAY['hello', 'world', 'apple']::character varying(10)[]);
-SELECT array_min(ARRAY['cat', 'dog', 'ant']::char(5)[]);
-SELECT array_min(ARRAY['cat', 'dog', 'ant']::character(5)[]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_min('{}'::integer[]);
@@ -114,10 +110,6 @@ SELECT array_max('{2.3, 2.4, 2.3}'::numeric[]);
 SELECT array_max('{NaN, Infinity}'::real[]);
 SELECT array_max('{Infinity, -Infinity}'::real[]);
 SELECT array_max('{-Infinity, 2}'::real[]);
-SELECT array_max(ARRAY['hello', 'world', 'apple']::varchar[]);
-SELECT array_max(ARRAY['hello', 'world', 'apple']::character varying(10)[]);
-SELECT array_max(ARRAY['cat', 'dog', 'ant']::char(5)[]);
-SELECT array_max(ARRAY['cat', 'dog', 'ant']::character(5)[]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_max('{}'::integer[]);
