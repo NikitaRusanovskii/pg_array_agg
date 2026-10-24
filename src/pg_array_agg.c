@@ -47,7 +47,7 @@ typedef enum {
     OP_SEQ, // = (short equal)
 } Operator;
 
-bool type_is_expected(Oid type_oid, Oid* expected_types, uint32 len) {
+bool type_is_expected(Oid type_oid, const Oid* expected_types, uint32 len) {
     for (int i = 0; i < len; i++) {
         if (expected_types[i] == type_oid) return true;
     }
@@ -155,7 +155,7 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
             bool success = false;
             while(i < len) {
                 if (predicate_string[i] == '"') {
-                    result[token_position++] = construct_token(T_STRING, &predicate_string[start], i - start + 1);
+                    result[token_position++] = construct_token(T_STRING, &predicate_string[start+1], i - start - 1);
                     success = true;
                     i++;
                     break;
@@ -171,7 +171,7 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
             bool success = false;
             while(i < len) {
                 if (predicate_string[i] == '\'') {
-                    result[token_position++] = construct_token(T_NUMBER, &predicate_string[start], i - start + 1);
+                    result[token_position++] = construct_token(T_NUMBER, &predicate_string[start+1], i - start - 1);
                     success = true;
                     i++;
                     break;
@@ -279,7 +279,7 @@ int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predi
 void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) {
     if (parsed == NULL)
         ereport(ERROR, ERRCODE_INVALID_PARAMETER_VALUE, errmsg("cast_predicate: Argument PARSED is null"));
-    if (result == NULL);
+    if (result == NULL)
         ereport(ERROR, ERRCODE_INVALID_PARAMETER_VALUE, errmsg("cast_predicate: argument RESULT is null"));
     // проверка на согласованность target_oid и операций
     switch(target_oid) {
@@ -319,10 +319,6 @@ void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) 
             result->const2 = string_to_datum(parsed->const2, parsed->const2len, target_oid);
         }
         break;
-        default: {
-            ereport(ERROR, ERRCODE_DATATYPE_MISMATCH,
-                    errmsg("cast_predicate: Invalid type-casting operation."));
-        }
     }
 }
 
@@ -337,23 +333,59 @@ int32 cmp_op(Oid target_oid, Datum first, Datum second, Oid collid) {
 
 }
 
-Datum mod_op(Oid target_oid, Datum first, Datum second) {
+bool datum_is_zero(Datum value, Oid type_oid, Oid collid) {
+    Datum zero;
+    switch (type_oid) {
+        case INT2OID:
+            zero = Int16GetDatum(0);
+            break;
+        case INT4OID:
+            zero = Int32GetDatum(0);
+            break;
+        case INT8OID:
+            zero = Int64GetDatum(0);
+            break;
+        case FLOAT4OID:
+            zero = Float4GetDatum(0.0f);
+            break;
+        case FLOAT8OID:
+            zero = Float8GetDatum(0.0);
+            break;
+        case NUMERICOID:
+            zero = DirectFunctionCall1(int8_numeric, Int64GetDatum(0));
+            break;
+        default:
+            ereport(ERROR,
+                    (errcode(ERRCODE_DATATYPE_MISMATCH),
+                     errmsg("datum_is_zero: incorrect datatype")));
+    }
+    return cmp_op(type_oid, value, zero, collid) == 0;
+}
+
+
+Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
+    if (datum_is_zero(second, target_oid, collid))
+                ereport(ERROR, ERRCODE_DIVISION_BY_ZERO, errmsg("process: division by zero"));
     Datum result;
     switch(target_oid) {
         case NUMERICOID: {
-            result = DirectFunctionCall2(numeric_cmp, first, second);
+            result = DirectFunctionCall2(numeric_mod, first, second);
             break;
         }
         case INT2OID: {
             result = Int16GetDatum(DatumGetInt16(first) % DatumGetInt16(second));
+            break;
         }
         case INT4OID: {
             result = Int32GetDatum(DatumGetInt32(first) % DatumGetInt32(second));
+            break;
         }
         case INT8OID: {
             result = Int64GetDatum(DatumGetInt64(first) % DatumGetInt64(second));
+            break;
         }
     }
+    return result;
 }
 
 bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid) {
@@ -362,7 +394,7 @@ bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid) {
 
     Token tokens[10];
     ParsedPredicate parsed;
-    Predicate predicate;
+    Predicate predicate = {0};
 
     int32 token_count = lexical_analyze(
         predicate_string,
@@ -400,7 +432,9 @@ bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid) {
             break;
         }
         case OP_MOD: {
-            Datum tmp = mod_op(target_oid, element, predicate.const1);
+            if (datum_is_zero(predicate.const1, target_oid, collid))
+                ereport(ERROR, ERRCODE_DIVISION_BY_ZERO, errmsg("process: division by zero"));
+            Datum tmp = mod_op(target_oid, element, predicate.const1, collid);
             res = (cmp_op(target_oid, tmp, predicate.const2, collid) == 0);
             break;
         }
@@ -422,6 +456,8 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     int32 result;
+    Oid expected_types[7] = {INT2OID, INT4OID, INT8OID,
+                             FLOAT4OID, FLOAT8OID, NUMERICOID, TEXTOID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL(); // функция STRIСT, этого никогда не произойдёт
     arr = PG_GETARG_ARRAYTYPE_P(0);
@@ -430,8 +466,9 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
         ereport(ERROR,
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
              errmsg("array_count_if: searching elements in manydimensional arrays is not supported yet")));
-    if (ARR_NDIM(arr) < 1) // пустой, нульмерный
-        PG_RETURN_NULL();
+    if (!type_is_expected(arr->elemtype, expected_types, 7))
+        ereport(ERROR, errcode(ERRCODE_DATATYPE_MISMATCH), errmsg("array_count_if: incorrect datatype"));
+    
     predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
     elemtype = arr->elemtype;
     result = 0;

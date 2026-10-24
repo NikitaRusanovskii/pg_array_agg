@@ -1,46 +1,88 @@
 diff -U3 /home/admin/pg_array_agg/test/expected/array_agg_functions.out /home/admin/pg_array_agg/test/results/array_agg_functions.out
 --- /home/admin/pg_array_agg/test/expected/array_agg_functions.out	2026-10-22 20:18:29.962527889 +0300
-+++ /home/admin/pg_array_agg/test/results/array_agg_functions.out	2026-10-24 10:06:09.827372368 +0300
-@@ -0,0 +1,63 @@
++++ /home/admin/pg_array_agg/test/results/array_agg_functions.out	2026-10-24 11:02:25.008961161 +0300
+@@ -0,0 +1,105 @@
 +CREATE EXTENSION IF NOT EXISTS pg_array_agg;
 +--- ======================================================================================
 +-- ТЕСТЫ array_count_if:
 +-- КОРРЕКТНЫЕ
 +SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x == 1');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if(ARRAY[1, 1], 'x == 1');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if(ARRAY[2], 'x == 2');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if('{}'::integer[], 'x == 1');
 + array_count_if 
 +----------------
-+               
++              1
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 1], 'x == 1');
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_count_if(ARRAY[2], 'x == 2');
++ array_count_if 
++----------------
++              1
 +(1 row)
 +
 +SELECT array_count_if('{1, 2, 1, 3}'::integer[], 'x == 1');
-+ERROR:  cast_predicate: argument RESULT is null
++ array_count_if 
++----------------
++              2
++(1 row)
++
 +SELECT array_count_if('{1, 2, 3, 4}'::integer[], 'x > 1');
-+ERROR:  cast_predicate: argument RESULT is null
++ array_count_if 
++----------------
++              3
++(1 row)
++
 +SELECT array_count_if('{1, 2}'::integer[], 'x == 3');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if('{Infinity}'::real[], 'x == Infinity');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if('{-Infinity}'::real[], 'x == -Infinity');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if('{NaN}'::real[], 'x == NaN');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if('{-0.0}'::real[], 'x == 0.0');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if(ARRAY['a', 'b', 'a']::text[], 'x == ''a''');
-+ERROR:  cast_predicate: argument RESULT is null
-+SELECT array_count_if(ARRAY['a', 'b', 'a']::text[], 'x != ''a''');
-+ERROR:  cast_predicate: argument RESULT is null
++ array_count_if 
++----------------
++              0
++(1 row)
++
++SELECT array_count_if('{Infinity}'::numeric[], 'x == ''Infinity''');
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{-Infinity}'::real[], 'x == ''-Infinity''');
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{NaN}'::double precision[], 'x == ''NaN''');
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{-0.0}'::numeric[], 'x == 0.0');
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
++ array_count_if 
++----------------
++              2
++(1 row)
++
 +-- ДОЛЖНЫ ВЕРНУТЬ NULL
 +SELECT array_count_if(NULL::integer[], 'x == 1');
 + array_count_if 
 +----------------
 +               
++(1 row)
++
++SELECT array_count_if('{}'::integer[], 'x == 1');
++ array_count_if 
++----------------
++              0
 +(1 row)
 +
 +SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
@@ -53,15 +95,15 @@ diff -U3 /home/admin/pg_array_agg/test/expected/array_agg_functions.out /home/ad
 +SELECT array_count_if(ARRAY[[1, 2], [3, 4]], 'x == 1');
 +ERROR:  array_count_if: searching elements in manydimensional arrays is not supported yet
 +SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > ''a''');
-+ERROR:  cast_predicate: argument RESULT is null
++ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
 +SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 1');
 +ERROR:  syntaxical_analize: Invalid first operator: 1
 +SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
 +ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
 +SELECT array_count_if(ARRAY[1, 2, 3], 'x == ''abc''');
-+ERROR:  cast_predicate: argument RESULT is null
++ERROR:  invalid input syntax for type integer: "abc"
 +SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
-+ERROR:  cast_predicate: argument RESULT is null
++ERROR:  process: division by zero
 +SELECT array_count_if(ARRAY[true, false], 'x == 1');
-+ERROR:  cast_predicate: argument RESULT is null
++ERROR:  array_count_if: incorrect datatype
 +DROP EXTENSION IF EXISTS pg_array_agg;
