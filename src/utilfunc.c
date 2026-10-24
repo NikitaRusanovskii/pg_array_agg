@@ -291,14 +291,26 @@ Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
             break;
         }
         case INT2OID: {
+            if (DatumGetInt16(first) == INT16_MIN && DatumGetInt16(second) == -1) {
+                result = Int16GetDatum(0);
+                break;
+            }
             result = Int16GetDatum(DatumGetInt16(first) % DatumGetInt16(second));
             break;
         }
         case INT4OID: {
+            if (DatumGetInt32(first) == INT32_MIN && DatumGetInt32(second) == -1) {
+                result = Int32GetDatum(0);
+                break;
+            }
             result = Int32GetDatum(DatumGetInt32(first) % DatumGetInt32(second));
             break;
         }
         case INT8OID: {
+            if (DatumGetInt64(first) == INT64_MIN && DatumGetInt64(second) == -1) {
+                result = Int64GetDatum(0);
+                break;
+            }
             result = Int64GetDatum(DatumGetInt64(first) % DatumGetInt64(second));
             break;
         }
