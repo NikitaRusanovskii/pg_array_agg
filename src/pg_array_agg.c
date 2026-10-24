@@ -317,7 +317,8 @@ Datum array_max(PG_FUNCTION_ARGS) {
 Datum array_count(PG_FUNCTION_ARGS) {
     ArrayType *arr;
     Datum element;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID, TEXTOID};
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+                            FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
     ArrayIterator arr_it;
     Datum elem;
     int32 result = 0;
@@ -337,7 +338,7 @@ Datum array_count(PG_FUNCTION_ARGS) {
              errmsg("array_count: Invalid ndim of array: %d", ARR_NDIM(arr))));
     }
 
-    if (!type_is_expected(arr->elemtype, expected_types, 7)) {
+    if (!type_is_expected(arr->elemtype, expected_types, 9)) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_count: Invalid elemtype of array. OID: %d", arr->elemtype)));
@@ -372,8 +373,8 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     int32 result;
-    Oid expected_types[7] = {INT2OID, INT4OID, INT8OID,
-                             FLOAT4OID, FLOAT8OID, NUMERICOID, TEXTOID};
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+                            FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL(); // функция STRIСT, этого никогда не произойдёт
     arr = PG_GETARG_ARRAYTYPE_P(0);
@@ -383,7 +384,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
              errmsg("array_count_if: searching elements in manydimensional arrays is not supported yet")));
 
-    if (!type_is_expected(arr->elemtype, expected_types, 7))
+    if (!type_is_expected(arr->elemtype, expected_types, 9))
         ereport(ERROR,
             (errcode(ERRCODE_DATATYPE_MISMATCH),
              errmsg("array_count_if: incorrect datatype")));
@@ -417,8 +418,8 @@ Datum array_any(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     bool result;
-    Oid expected_types[7] = {INT2OID, INT4OID, INT8OID,
-                             FLOAT4OID, FLOAT8OID, NUMERICOID, TEXTOID};
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+                            FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL(); // функция STRIСT, этого никогда не произойдёт
     arr = PG_GETARG_ARRAYTYPE_P(0);
@@ -428,7 +429,7 @@ Datum array_any(PG_FUNCTION_ARGS) {
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
              errmsg("array_any: searching elements in manydimensional arrays is not supported yet")));
 
-    if (!type_is_expected(arr->elemtype, expected_types, 7))
+    if (!type_is_expected(arr->elemtype, expected_types, 9))
         ereport(ERROR,
             (errcode(ERRCODE_DATATYPE_MISMATCH),
              errmsg("array_any: incorrect datatype")));
@@ -461,8 +462,8 @@ Datum array_all(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     bool result;
-    Oid expected_types[7] = {INT2OID, INT4OID, INT8OID,
-                             FLOAT4OID, FLOAT8OID, NUMERICOID, TEXTOID};
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+                            FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL(); // функция STRIСT, этого никогда не произойдёт
     arr = PG_GETARG_ARRAYTYPE_P(0);
@@ -472,7 +473,7 @@ Datum array_all(PG_FUNCTION_ARGS) {
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
              errmsg("array_all: searching elements in manydimensional arrays is not supported yet")));
 
-    if (!type_is_expected(arr->elemtype, expected_types, 7))
+    if (!type_is_expected(arr->elemtype, expected_types, 9))
         ereport(ERROR,
             (errcode(ERRCODE_DATATYPE_MISMATCH),
              errmsg("array_all: incorrect datatype")));
@@ -505,8 +506,8 @@ Datum array_none(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     bool result;
-    Oid expected_types[7] = {INT2OID, INT4OID, INT8OID,
-                             FLOAT4OID, FLOAT8OID, NUMERICOID, TEXTOID};
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+                            FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL(); // функция STRIСT, этого никогда не произойдёт
     arr = PG_GETARG_ARRAYTYPE_P(0);
@@ -516,7 +517,7 @@ Datum array_none(PG_FUNCTION_ARGS) {
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
              errmsg("array_none: searching elements in manydimensional arrays is not supported yet")));
 
-    if (!type_is_expected(arr->elemtype, expected_types, 7))
+    if (!type_is_expected(arr->elemtype, expected_types, 9))
         ereport(ERROR,
             (errcode(ERRCODE_DATATYPE_MISMATCH),
              errmsg("array_none: incorrect datatype")));

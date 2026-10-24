@@ -267,6 +267,8 @@ void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) 
 
     // проверка на согласованность target_oid и операций
     switch(target_oid) {
+        case VARCHAROID:
+        case BPCHAROID:
         case TEXTOID: {
             if (parsed->op != OP_EQ && parsed->op != OP_NEQ)
                 ereport(ERROR,

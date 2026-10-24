@@ -1,3 +1,4 @@
+
 CREATE EXTENSION IF NOT EXISTS pg_array_agg;
 --- ======================================================================================
 -- ТЕСТЫ array_product:
@@ -88,6 +89,10 @@ SELECT array_min('{2.3, 2.4, 2.3}'::numeric[]);
 SELECT array_min('{-Infinity, NaN}'::real[]);
 SELECT array_min('{Infinity, -Infinity}'::real[]);
 SELECT array_min('{NaN, Infinity}'::real[]);
+SELECT array_min(ARRAY['hello', 'world', 'apple']::varchar[]);
+SELECT array_min(ARRAY['hello', 'world', 'apple']::character varying(10)[]);
+SELECT array_min(ARRAY['cat', 'dog', 'ant']::char(5)[]);
+SELECT array_min(ARRAY['cat', 'dog', 'ant']::character(5)[]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_min('{}'::integer[]);
@@ -96,7 +101,7 @@ SELECT array_min('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
 SELECT array_min(ARRAY[[1, 2], [3, 4]]);
-SELECT array_min(ARRAY['a', 'b']::text[]);
+SELECT array_min(ARRAY['a', 'b']::boolean[]);
 
 --- ======================================================================================
 -- ТЕСТЫ array_max:
@@ -109,6 +114,10 @@ SELECT array_max('{2.3, 2.4, 2.3}'::numeric[]);
 SELECT array_max('{NaN, Infinity}'::real[]);
 SELECT array_max('{Infinity, -Infinity}'::real[]);
 SELECT array_max('{-Infinity, 2}'::real[]);
+SELECT array_max(ARRAY['hello', 'world', 'apple']::varchar[]);
+SELECT array_max(ARRAY['hello', 'world', 'apple']::character varying(10)[]);
+SELECT array_max(ARRAY['cat', 'dog', 'ant']::char(5)[]);
+SELECT array_max(ARRAY['cat', 'dog', 'ant']::character(5)[]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_max('{}'::integer[]);
@@ -117,7 +126,7 @@ SELECT array_max('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
 SELECT array_max(ARRAY[[1, 2], [3, 4]]);
-SELECT array_max(ARRAY['a', 'b']::text[]);
+SELECT array_max(ARRAY['a', 'b']::boolean[]);
 
 --- ======================================================================================
 -- ТЕСТЫ array_count:
@@ -138,6 +147,11 @@ SELECT array_count('{NaN, NaN}'::real[], 'NaN'::real);
 SELECT array_count(ARRAY['a', 'b', 'a'], 'a');
 SELECT array_count(ARRAY['a', 'b', 'a'], 'b');
 SELECT array_count(ARRAY['a', 'b', 'a'], 'c');
+SELECT array_count(ARRAY['hello', 'world', 'hello']::varchar[], 'hello'::varchar);
+SELECT array_count(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'hello'::character varying(10));
+SELECT array_count(ARRAY['cat', 'dog', 'cat']::char(5)[], 'cat'::char(5));
+SELECT array_count(ARRAY['cat', 'dog', 'cat']::character(5)[], 'cat'::character(5));
+SELECT array_count(ARRAY['cat'::char(5), 'cat  '::char(5), 'dog'::char(5)], 'cat'::char(5));
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_count(NULL::integer[], 1);
@@ -165,6 +179,12 @@ SELECT array_count_if('{NaN}'::double precision[], 'x == ''NaN''');
 SELECT array_count_if('{-0.0}'::numeric[], 'x == 0.0');
 SELECT array_count_if(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
 SELECT array_count_if('{}'::integer[], 'x == 1');
+SELECT array_count_if(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
+SELECT array_count_if(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
+SELECT array_count_if(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
+SELECT array_count_if(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+SELECT array_count_if(ARRAY['cat'::char(5), 'cat  '::char(5), 'dog'::char(5)], 'x == "cat"');
+
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_count_if(NULL::integer[], 'x == 1');
 SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
@@ -193,6 +213,11 @@ SELECT array_all('{NaN}'::double precision[], 'x == ''NaN''');
 SELECT array_all('{-0.0}'::numeric[], 'x == 0.0');
 SELECT array_all(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
 SELECT array_all('{}'::integer[], 'x == 1');
+SELECT array_all(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
+SELECT array_all(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
+SELECT array_all(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
+SELECT array_all(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_all(NULL::integer[], 'x == 1');
 SELECT array_all(ARRAY[1, 2, 3], NULL::text);
@@ -221,6 +246,11 @@ SELECT array_any('{NaN}'::double precision[], 'x == ''NaN''');
 SELECT array_any('{-0.0}'::numeric[], 'x == 0.0');
 SELECT array_any(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
 SELECT array_any('{}'::integer[], 'x == 1');
+SELECT array_any(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
+SELECT array_any(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
+SELECT array_any(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
+SELECT array_any(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_any(NULL::integer[], 'x == 1');
 SELECT array_any(ARRAY[1, 2, 3], NULL::text);
@@ -249,6 +279,11 @@ SELECT array_none('{NaN}'::double precision[], 'x == ''NaN''');
 SELECT array_none('{-0.0}'::numeric[], 'x == 0.0');
 SELECT array_none(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
 SELECT array_none('{}'::integer[], 'x == 1');
+SELECT array_none(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
+SELECT array_none(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
+SELECT array_none(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
+SELECT array_none(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_none(NULL::integer[], 'x == 1');
 SELECT array_none(ARRAY[1, 2, 3], NULL::text);
