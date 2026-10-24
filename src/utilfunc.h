@@ -68,3 +68,4 @@ int32 cmp_op(Oid target_oid, Datum first, Datum second, Oid collid);
 bool datum_is_zero(Datum value, Oid type_oid, Oid collid);
 Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid);
 bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid);
+Numeric datum_to_numeric(Datum element, Oid type_oid);

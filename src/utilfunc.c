@@ -4,6 +4,7 @@
 #include "utils/elog.h"
 #include "utils/builtins.h"
 #include "utils/typcache.h"
+#include "utils/numeric.h"
 #include "catalog/pg_type_d.h"
 #include "utilfunc.h"
 
@@ -13,6 +14,37 @@ bool type_is_expected(Oid type_oid, const Oid* expected_types, uint32 len) {
         if (expected_types[i] == type_oid) return true;
     }
     return false;
+}
+
+Numeric datum_to_numeric(Datum element, Oid type_oid) {
+    Numeric tmp;
+    switch(type_oid) {
+        case INT2OID:
+            tmp = int64_to_numeric((int64)DatumGetInt16(element));
+            break;
+        case INT4OID:
+            tmp = int64_to_numeric((int64)DatumGetInt32(element));
+            break;
+        case INT8OID:
+            tmp = int64_to_numeric((int64)DatumGetInt64(element));
+            break;
+
+        case FLOAT4OID:
+            tmp = DatumGetNumeric(DirectFunctionCall1(float4_numeric, element));
+            break;
+        case FLOAT8OID:
+            tmp = DatumGetNumeric(DirectFunctionCall1(float8_numeric, element));
+            break;
+        case NUMERICOID:
+            tmp = DatumGetNumeric(element);
+            break;
+        default:
+            ereport(ERROR, errcode(ERRCODE_WRONG_OBJECT_TYPE),
+                errmsg("datum_to_numeric: The function does not support this OID: %d", type_oid));
+            tmp = int64_to_numeric(0);
+            break;
+    }
+    return tmp;
 }
 
 Datum string_to_datum(char* str, int len, Oid target_oid) {

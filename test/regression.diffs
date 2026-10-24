@@ -1,0 +1,600 @@
+diff -U3 /home/admin/pg_array_agg/test/expected/array_agg_functions.out /home/admin/pg_array_agg/test/results/array_agg_functions.out
+--- /home/admin/pg_array_agg/test/expected/array_agg_functions.out	2026-10-24 11:45:33.843470634 +0300
++++ /home/admin/pg_array_agg/test/results/array_agg_functions.out	2026-10-24 12:35:32.393699754 +0300
+@@ -1,5 +1,596 @@
+ CREATE EXTENSION IF NOT EXISTS pg_array_agg;
+ --- ======================================================================================
++-- ТЕСТЫ array_product:
++-- КОРРЕКТНЫЕ
++SELECT array_product(ARRAY[1,2,3,4]);
++ array_product 
++---------------
++            24
++(1 row)
++
++SELECT array_product(ARRAY[1, 1]);
++ array_product 
++---------------
++             1
++(1 row)
++
++SELECT array_product(ARRAY[2]);
++ array_product 
++---------------
++             2
++(1 row)
++
++SELECT array_product('{}'::integer[]);
++ array_product 
++---------------
++             1
++(1 row)
++
++SELECT array_product('{2.3, 2.4, 2.3}'::real[]);
++ array_product 
++---------------
++        12.696
++(1 row)
++
++SELECT array_product('{2.3, 2.4, 2.3}'::numeric[]);
++ array_product 
++---------------
++        12.696
++(1 row)
++
++SELECT array_product('{0, 1, 2}'::integer[]);
++ array_product 
++---------------
++             0
++(1 row)
++
++SELECT array_product('{1, -2, 3}'::integer[]);
++ array_product 
++---------------
++            -6
++(1 row)
++
++SELECT array_product('{NaN}'::real[]);
++ array_product 
++---------------
++           NaN
++(1 row)
++
++SELECT array_product('{Infinity}'::real[]);
++ array_product 
++---------------
++      Infinity
++(1 row)
++
++SELECT array_product('{-Infinity}'::real[]);
++ array_product 
++---------------
++     -Infinity
++(1 row)
++
++SELECT array_product('{Infinity, 2}'::real[]);
++ array_product 
++---------------
++      Infinity
++(1 row)
++
++SELECT array_product('{-Infinity, 2}'::real[]);
++ array_product 
++---------------
++     -Infinity
++(1 row)
++
++SELECT array_product('{Infinity, 0}'::real[]);
++ array_product 
++---------------
++           NaN
++(1 row)
++
++SELECT array_product('{Infinity, -Infinity}'::real[]);
++ array_product 
++---------------
++     -Infinity
++(1 row)
++
++SELECT array_product('{NaN, 0}'::real[]);
++ array_product 
++---------------
++           NaN
++(1 row)
++
++-- ДОЛЖНЫ ВЕРНУТЬ NULL
++SELECT array_product(NULL::integer[]);
++ array_product 
++---------------
++              
++(1 row)
++
++SELECT array_product('{1, NULL, 3}'::integer[]);
++ array_product 
++---------------
++              
++(1 row)
++
++-- НЕКОРРЕКТНЫЕ
++SELECT array_product(ARRAY[[1, 2], [3, 4]]);
++ERROR:  array_product: Invalid ndim of array: 2
++SELECT array_product(ARRAY['a', 'b']::text[]);
++ERROR:  array_product: Invalid elemtype of array. OID: 25
++--- ======================================================================================
++-- ТЕСТЫ array_sum:
++-- КОРРЕКТНЫЕ
++SELECT array_sum(ARRAY[1,2,3,4]);
++ array_sum 
++-----------
++        10
++(1 row)
++
++SELECT array_sum(ARRAY[1, 1]);
++ array_sum 
++-----------
++         2
++(1 row)
++
++SELECT array_sum(ARRAY[2]);
++ array_sum 
++-----------
++         2
++(1 row)
++
++SELECT array_sum('{}'::integer[]);
++ array_sum 
++-----------
++         0
++(1 row)
++
++SELECT array_sum('{2.3, 2.4, 2.3}'::real[]);
++ array_sum 
++-----------
++       7.0
++(1 row)
++
++SELECT array_sum('{2.3, 2.4, 2.3}'::numeric[]);
++ array_sum 
++-----------
++       7.0
++(1 row)
++
++SELECT array_sum('{0, 1, 2}'::integer[]);
++ array_sum 
++-----------
++         3
++(1 row)
++
++SELECT array_sum('{1, -2, 3}'::integer[]);
++ array_sum 
++-----------
++         2
++(1 row)
++
++SELECT array_sum('{NaN}'::real[]);
++ array_sum 
++-----------
++       NaN
++(1 row)
++
++SELECT array_sum('{Infinity}'::real[]);
++ array_sum 
++-----------
++  Infinity
++(1 row)
++
++SELECT array_sum('{-Infinity}'::real[]);
++ array_sum 
++-----------
++ -Infinity
++(1 row)
++
++SELECT array_sum('{Infinity, 2}'::real[]);
++ array_sum 
++-----------
++  Infinity
++(1 row)
++
++SELECT array_sum('{-Infinity, 2}'::real[]);
++ array_sum 
++-----------
++ -Infinity
++(1 row)
++
++SELECT array_sum('{Infinity, -Infinity}'::real[]);
++ array_sum 
++-----------
++       NaN
++(1 row)
++
++-- ДОЛЖНЫ ВЕРНУТЬ NULL
++SELECT array_sum(NULL::integer[]);
++ array_sum 
++-----------
++          
++(1 row)
++
++SELECT array_sum('{1, NULL, 3}'::integer[]);
++ array_sum 
++-----------
++          
++(1 row)
++
++-- НЕКОРРЕКТНЫЕ
++SELECT array_sum(ARRAY[[1, 2], [3, 4]]);
++ERROR:  array_sum: Invalid ndim of array: 2
++SELECT array_sum(ARRAY['a', 'b']::text[]);
++ERROR:  array_sum: Invalid elemtype of array. OID: 25
++--- ======================================================================================
++-- ТЕСТЫ array_avg:
++-- КОРРЕКТНЫЕ
++SELECT array_avg(ARRAY[1,2,3,4]);
++     array_avg      
++--------------------
++ 2.5000000000000000
++(1 row)
++
++SELECT array_avg(ARRAY[1, 1]);
++       array_avg        
++------------------------
++ 1.00000000000000000000
++(1 row)
++
++SELECT array_avg(ARRAY[2]);
++     array_avg      
++--------------------
++ 2.0000000000000000
++(1 row)
++
++SELECT array_avg('{2.3, 2.4, 2.3}'::real[]);
++     array_avg      
++--------------------
++ 2.3333333333333333
++(1 row)
++
++SELECT array_avg('{2.3, 2.4, 2.3}'::numeric[]);
++     array_avg      
++--------------------
++ 2.3333333333333333
++(1 row)
++
++SELECT array_avg('{0, 1, 2}'::integer[]);
++       array_avg        
++------------------------
++ 1.00000000000000000000
++(1 row)
++
++SELECT array_avg('{1, -2, 3}'::integer[]);
++       array_avg        
++------------------------
++ 0.66666666666666666667
++(1 row)
++
++SELECT array_avg('{NaN}'::real[]);
++ array_avg 
++-----------
++       NaN
++(1 row)
++
++SELECT array_avg('{Infinity}'::real[]);
++ array_avg 
++-----------
++  Infinity
++(1 row)
++
++SELECT array_avg('{-Infinity}'::real[]);
++ array_avg 
++-----------
++ -Infinity
++(1 row)
++
++SELECT array_avg('{Infinity, -Infinity}'::real[]);
++ array_avg 
++-----------
++       NaN
++(1 row)
++
++-- ДОЛЖНЫ ВЕРНУТЬ NULL
++SELECT array_avg('{}'::integer[]);
++ array_avg 
++-----------
++          
++(1 row)
++
++SELECT array_avg(NULL::integer[]);
++ array_avg 
++-----------
++          
++(1 row)
++
++SELECT array_avg('{1, NULL, 3}'::integer[]);
++ array_avg 
++-----------
++          
++(1 row)
++
++-- НЕКОРРЕКТНЫЕ
++SELECT array_avg(ARRAY[[1, 2], [3, 4]]);
++ERROR:  array_avg: Invalid ndim of array: 2
++SELECT array_avg(ARRAY['a', 'b']::text[]);
++ERROR:  array_avg: Invalid elemtype of array. OID: 25
++--- ======================================================================================
++-- ТЕСТЫ array_min:
++-- КОРРЕКТНЫЕ
++SELECT array_min(ARRAY[1,2,3,4]);
++ array_min 
++-----------
++         1
++(1 row)
++
++SELECT array_min(ARRAY[1, 1]);
++ array_min 
++-----------
++         1
++(1 row)
++
++SELECT array_min(ARRAY[2]);
++ array_min 
++-----------
++         2
++(1 row)
++
++SELECT array_min('{2.3, 2.4, 2.3}'::real[]);
++ array_min 
++-----------
++       2.3
++(1 row)
++
++SELECT array_min('{2.3, 2.4, 2.3}'::numeric[]);
++ array_min 
++-----------
++       2.3
++(1 row)
++
++SELECT array_min('{-Infinity, NaN}'::real[]);
++ array_min 
++-----------
++ -Infinity
++(1 row)
++
++SELECT array_min('{Infinity, -Infinity}'::real[]);
++ array_min 
++-----------
++ -Infinity
++(1 row)
++
++SELECT array_min('{NaN, Infinity}'::real[]);
++ array_min 
++-----------
++  Infinity
++(1 row)
++
++-- ДОЛЖНЫ ВЕРНУТЬ NULL
++SELECT array_min('{}'::integer[]);
++ array_min 
++-----------
++          
++(1 row)
++
++SELECT array_min(NULL::integer[]);
++ array_min 
++-----------
++          
++(1 row)
++
++SELECT array_min('{1, NULL, 3}'::integer[]);
++ array_min 
++-----------
++          
++(1 row)
++
++-- НЕКОРРЕКТНЫЕ
++SELECT array_min(ARRAY[[1, 2], [3, 4]]);
++ERROR:  Invalid ndim of array: 2
++SELECT array_min(ARRAY['a', 'b']::text[]);
++ERROR:  Invalid elemtype of array. OID: 25
++--- ======================================================================================
++-- ТЕСТЫ array_max:
++-- КОРРЕКТНЫЕ
++SELECT array_max(ARRAY[1,2,3,4]);
++ array_max 
++-----------
++         4
++(1 row)
++
++SELECT array_max(ARRAY[1, 1]);
++ array_max 
++-----------
++         1
++(1 row)
++
++SELECT array_max(ARRAY[2]);
++ array_max 
++-----------
++         2
++(1 row)
++
++SELECT array_max('{2.3, 2.4, 2.3}'::real[]);
++ array_max 
++-----------
++       2.4
++(1 row)
++
++SELECT array_max('{2.3, 2.4, 2.3}'::numeric[]);
++ array_max 
++-----------
++       2.4
++(1 row)
++
++SELECT array_max('{NaN, Infinity}'::real[]);
++ array_max 
++-----------
++       NaN
++(1 row)
++
++SELECT array_max('{Infinity, -Infinity}'::real[]);
++ array_max 
++-----------
++  Infinity
++(1 row)
++
++SELECT array_max('{-Infinity, 2}'::real[]);
++ array_max 
++-----------
++         2
++(1 row)
++
++-- ДОЛЖНЫ ВЕРНУТЬ NULL
++SELECT array_max('{}'::integer[]);
++ array_max 
++-----------
++          
++(1 row)
++
++SELECT array_max(NULL::integer[]);
++ array_max 
++-----------
++          
++(1 row)
++
++SELECT array_max('{1, NULL, 3}'::integer[]);
++ array_max 
++-----------
++          
++(1 row)
++
++-- НЕКОРРЕКТНЫЕ
++SELECT array_max(ARRAY[[1, 2], [3, 4]]);
++ERROR:  array_max: Invalid ndim of array: 2
++SELECT array_max(ARRAY['a', 'b']::text[]);
++ERROR:  array_max: Invalid elemtype of array. OID: 25
++--- ======================================================================================
++-- ТЕСТЫ array_count:
++-- КОРРЕКТНЫЕ
++SELECT array_count(ARRAY[1, 2, 3, 4], 1);
++ array_count 
++-------------
++           1
++(1 row)
++
++SELECT array_count(ARRAY[1, 1], 1);
++ array_count 
++-------------
++           2
++(1 row)
++
++SELECT array_count(ARRAY[2], 2);
++ array_count 
++-------------
++           1
++(1 row)
++
++SELECT array_count('{}'::integer[], 1);
++ array_count 
++-------------
++           0
++(1 row)
++
++SELECT array_count('{1, 2, 1, 3}'::integer[], 1);
++ array_count 
++-------------
++           2
++(1 row)
++
++SELECT array_count('{1, 2, 1, 3}'::integer[], 3);
++ array_count 
++-------------
++           1
++(1 row)
++
++SELECT array_count('{1, 2, 1, 3}'::integer[], 4);
++ array_count 
++-------------
++           0
++(1 row)
++
++SELECT array_count('{1, NULL, 1, NULL}'::integer[], 1);
++ array_count 
++-------------
++            
++(1 row)
++
++SELECT array_count('{NULL, NULL}'::integer[], 1);
++ array_count 
++-------------
++            
++(1 row)
++
++SELECT array_count(ARRAY[0.0::real], -0.0::real);
++ array_count 
++-------------
++           1
++(1 row)
++
++SELECT array_count('{Infinity, Infinity}'::real[], 'Infinity'::real);
++ array_count 
++-------------
++           2
++(1 row)
++
++SELECT array_count('{-Infinity, -Infinity}'::real[], '-Infinity'::real);
++ array_count 
++-------------
++           2
++(1 row)
++
++SELECT array_count('{NaN, NaN}'::real[], 'NaN'::real);
++ array_count 
++-------------
++           2
++(1 row)
++
++SELECT array_count(ARRAY['a', 'b', 'a'], 'a');
++ array_count 
++-------------
++           2
++(1 row)
++
++SELECT array_count(ARRAY['a', 'b', 'a'], 'b');
++ array_count 
++-------------
++           1
++(1 row)
++
++SELECT array_count(ARRAY['a', 'b', 'a'], 'c');
++ array_count 
++-------------
++           0
++(1 row)
++
++-- ДОЛЖНЫ ВЕРНУТЬ NULL
++SELECT array_count(NULL::integer[], 1);
++ array_count 
++-------------
++            
++(1 row)
++
++SELECT array_count(ARRAY[1, 2, 3], NULL);
++ array_count 
++-------------
++            
++(1 row)
++
++-- НЕКОРРЕКТНЫЕ
++SELECT array_count(ARRAY[[1, 2], [3, 4]], 1);
++ERROR:  array_count: Invalid ndim of array: 2
++SELECT array_count(ARRAY[1, 2, 3], '1'::text);
++ERROR:  function array_count(integer[], text) does not exist
++LINE 1: SELECT array_count(ARRAY[1, 2, 3], '1'::text);
++               ^
++HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
++SELECT array_count(ARRAY['a', 'b'], 1);
++ERROR:  function array_count(text[], integer) does not exist
++LINE 1: SELECT array_count(ARRAY['a', 'b'], 1);
++               ^
++HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
++--- ======================================================================================
++--- ======================================================================================
+ -- ТЕСТЫ array_count_if:
+ -- КОРРЕКТНЫЕ
+ SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x == 1');
