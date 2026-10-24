@@ -56,3 +56,11 @@ dkms.conf
 
 autotesting.sh
 old
+
+results/
+results
+
+expected/
+expected
+
+tmp.sql
