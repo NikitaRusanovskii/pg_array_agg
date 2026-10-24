@@ -64,3 +64,5 @@ expected/
 expected
 
 tmp.sql
+
+.vscode
