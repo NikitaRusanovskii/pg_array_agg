@@ -81,6 +81,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
 
     }
 
+    PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
 
     PG_RETURN_NUMERIC(res);
@@ -136,6 +137,7 @@ Datum array_sum(PG_FUNCTION_ARGS) {
 
     }
 
+    PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
 
     PG_RETURN_NUMERIC(res);
@@ -199,6 +201,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
              errmsg("array_avg: An error occurred during a numeric sum.")));
     }
 
+    PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
     res = numeric_div_opt_error(res, count, &err);
 
