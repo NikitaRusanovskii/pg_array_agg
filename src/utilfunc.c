@@ -39,8 +39,9 @@ Numeric datum_to_numeric(Datum element, Oid type_oid) {
             tmp = DatumGetNumeric(element);
             break;
         default:
-            ereport(ERROR, errcode(ERRCODE_WRONG_OBJECT_TYPE),
-                errmsg("datum_to_numeric: The function does not support this OID: %d", type_oid));
+            ereport(ERROR,
+                (errcode(ERRCODE_WRONG_OBJECT_TYPE),
+                 errmsg("datum_to_numeric: The function does not support this OID: %d", type_oid)));
             tmp = int64_to_numeric(0);
             break;
     }
@@ -63,8 +64,9 @@ Token construct_token(TokenType type, const char* token, int32 lenght) {
 }
 
 int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 token_len) {
-    memset(result, 0, token_len * sizeof(*result));
     int32 token_position = 0;
+
+    memset(result, 0, token_len * sizeof(*result));
     for (int32 i = 0; i < len; i++) {
         if (token_position >= token_len) break; // вместо ошибки остановим цикл
         if (predicate_string[i] ==  ' ') continue;
@@ -101,8 +103,9 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
         }
         else if (predicate_string[i] == '"') {
             int32 start = i;
-            i++;
             bool success = false;
+
+            i++;
             while(i < len) {
                 if (predicate_string[i] == '"') {
                     result[token_position++] = construct_token(T_STRING, &predicate_string[start+1], i - start - 1);
@@ -112,13 +115,17 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
                 }
                 i++;
             }
-            if (!success) ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("lexical_analyze: invalid predicate string"));
+            if (!success)
+                ereport(ERROR,
+                    (errcode(ERRCODE_SYNTAX_ERROR),
+                     errmsg("lexical_analyze: invalid predicate string")));
         }
         else if (predicate_string[i] == '\'') {
             // Для '+-Infinity', 'NaN', 
             int32 start = i;
-            i++;
             bool success = false;
+
+            i++;
             while(i < len) {
                 if (predicate_string[i] == '\'') {
                     result[token_position++] = construct_token(T_NUMBER, &predicate_string[start+1], i - start - 1);
@@ -129,10 +136,13 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
                 i++;
             }
             if (!success)
-                ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("lexical_analyze: invalid predicate string"));
+                ereport(ERROR,
+                    (errcode(ERRCODE_SYNTAX_ERROR),
+                     errmsg("lexical_analyze: invalid predicate string")));
         }
         else {
             int32 start = i;
+            int32 token_length;
 
             while (i < len &&
                    predicate_string[i] != '=' &&
@@ -142,10 +152,12 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
                    predicate_string[i] != '%' &&
                    predicate_string[i] != ' ') i++;
 
-            int32 token_length = i - start;
+            token_length = i - start;
 
             if (token_length == 0)
-                ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("lexical_analyze: invalid token_lenght = 0"));
+                ereport(ERROR,
+                    (errcode(ERRCODE_SYNTAX_ERROR),
+                     errmsg("lexical_analyze: invalid token_lenght = 0")));
 
             result[token_position++] = construct_token(T_NUMBER, &predicate_string[start], token_length);
         }
@@ -165,12 +177,20 @@ int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predi
     int32 const1pos = 2;
     int32 op2pos = 3;
     int32 const2pos = 4;
+
     memset(predicate, 0, sizeof(*predicate));
-    if (len <= 0) ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("syntaxical_analize: Invalid token array len: %d", len));
+    if (len <= 0)
+        ereport(ERROR,
+            (errcode(ERRCODE_SYNTAX_ERROR),
+             errmsg("syntaxical_analize: Invalid token array len: %d", len)));
     if (parsed_tokens[len-1].type != T_END || (len != cmplen && len != modlen))
-        ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("syntaxical_analize: Invalid token array format. Array len: %d", len));
+        ereport(ERROR,
+            (errcode(ERRCODE_SYNTAX_ERROR),
+             errmsg("syntaxical_analize: Invalid token array format. Array len: %d", len)));
     if (parsed_tokens[varpos].type != T_VARIABLE)
-        ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("syntaxical_analize: Invalid token array. First token is not variable"));
+        ereport(ERROR,
+            (errcode(ERRCODE_SYNTAX_ERROR),
+             errmsg("syntaxical_analize: Invalid token array. First token is not variable")));
     if (len == cmplen) {
         predicate->predicate_type = CMP;
         switch(parsed_tokens[op1pos].type) {
@@ -199,11 +219,13 @@ int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predi
                 break;
             }
             default: {
-                ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("syntaxical_analize: Invalid first operator: %d", parsed_tokens[op1pos].type));
+                ereport(ERROR,
+                    (errcode(ERRCODE_SYNTAX_ERROR),
+                     errmsg("syntaxical_analize: Invalid first operator: %d", parsed_tokens[op1pos].type)));
                 break;
             }
         }
-        predicate->const1 = parsed_tokens[const1pos].token;
+        predicate->const1 = (char *) parsed_tokens[const1pos].token;
         predicate->const1len = parsed_tokens[const1pos].lenght;
         predicate->const2 = NULL;
     }
@@ -212,11 +234,18 @@ int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predi
             predicate->predicate_type = MOD;    
             predicate->op = OP_MOD;
         }
-        else ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("syntaxical_analize: Invalid token array len: %d", len));
+        else
+            ereport(ERROR,
+                (errcode(ERRCODE_SYNTAX_ERROR),
+                 errmsg("syntaxical_analize: Invalid token array len: %d", len)));
+
         if (parsed_tokens[op2pos].type != T_SEQ)
-            ereport(ERROR, ERRCODE_SYNTAX_ERROR, errmsg("syntaxical_analize: Invalid second operator: %d", parsed_tokens[op2pos].type));
-        predicate->const1 = parsed_tokens[const1pos].token;
-        predicate->const2 = parsed_tokens[const2pos].token;
+            ereport(ERROR,
+                (errcode(ERRCODE_SYNTAX_ERROR),
+                 errmsg("syntaxical_analize: Invalid second operator: %d", parsed_tokens[op2pos].type)));
+
+        predicate->const1 = (char *) parsed_tokens[const1pos].token;
+        predicate->const2 = (char *) parsed_tokens[const2pos].token;
         predicate->const1len = parsed_tokens[const1pos].lenght;
         predicate->const2len = parsed_tokens[const2pos].lenght;
     }
@@ -228,27 +257,35 @@ int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predi
 
 void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) {
     if (parsed == NULL)
-        ereport(ERROR, ERRCODE_INVALID_PARAMETER_VALUE, errmsg("cast_predicate: Argument PARSED is null"));
+        ereport(ERROR,
+            (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+             errmsg("cast_predicate: Argument PARSED is null")));
     if (result == NULL)
-        ereport(ERROR, ERRCODE_INVALID_PARAMETER_VALUE, errmsg("cast_predicate: argument RESULT is null"));
+        ereport(ERROR,
+            (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+             errmsg("cast_predicate: argument RESULT is null")));
+
     // проверка на согласованность target_oid и операций
     switch(target_oid) {
         case TEXTOID: {
             if (parsed->op != OP_EQ && parsed->op != OP_NEQ)
-                ereport(ERROR, ERRCODE_INVALID_PARAMETER_VALUE,
-                    errmsg("cast_predicate: Invalid operator. Type: TEXT, operator: %d", parsed->op));
+                ereport(ERROR,
+                    (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+                     errmsg("cast_predicate: Invalid operator. Type: TEXT, operator: %d", parsed->op)));
             break;
         }
         case FLOAT4OID: {
             if (parsed->op == OP_MOD)
-                ereport(ERROR, ERRCODE_INVALID_PARAMETER_VALUE,
-                    errmsg("cast_predicate: Invalid operator. Type: FLOAT4, operator: %d", parsed->op));
+                ereport(ERROR,
+                    (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+                     errmsg("cast_predicate: Invalid operator. Type: FLOAT4, operator: %d", parsed->op)));
             break;
         }
         case FLOAT8OID: {
             if (parsed->op == OP_MOD)
-                ereport(ERROR, ERRCODE_INVALID_PARAMETER_VALUE,
-                    errmsg("cast_predicate: Invalid operator. Type: FLOAT8, operator: %d", parsed->op));
+                ereport(ERROR,
+                    (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+                     errmsg("cast_predicate: Invalid operator. Type: FLOAT8, operator: %d", parsed->op)));
             break;
         }
 
@@ -265,10 +302,10 @@ void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) 
         case INT4OID:
         case INT8OID:
         case NUMERICOID:
-        if(parsed->predicate_type == MOD) {
-            result->const2 = string_to_datum(parsed->const2, parsed->const2len, target_oid);
-        }
-        break;
+            if(parsed->predicate_type == MOD) {
+                result->const2 = string_to_datum(parsed->const2, parsed->const2len, target_oid);
+            }
+            break;
     }
 }
 
@@ -276,8 +313,9 @@ int32 cmp_op(Oid target_oid, Datum first, Datum second, Oid collid) {
     TypeCacheEntry* typentry;
     typentry = lookup_type_cache(target_oid, TYPECACHE_CMP_PROC_FINFO);
     if(!OidIsValid(typentry->cmp_proc))
-        ereport(ERROR, ERRCODE_UNDEFINED_FUNCTION,
-            errmsg("cmp_op: Invalid oid of cmp func"));
+        ereport(ERROR,
+            (errcode(ERRCODE_UNDEFINED_FUNCTION),
+             errmsg("cmp_op: Invalid oid of cmp func")));
 
     return DatumGetInt32(FunctionCall2Coll(&typentry->cmp_proc_finfo, collid, first, second));
 
@@ -308,15 +346,21 @@ bool datum_is_zero(Datum value, Oid type_oid, Oid collid) {
             ereport(ERROR,
                     (errcode(ERRCODE_DATATYPE_MISMATCH),
                      errmsg("datum_is_zero: incorrect datatype")));
+            zero = (Datum) 0;
+            break;
     }
     return cmp_op(type_oid, value, zero, collid) == 0;
 }
 
 
 Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
-    if (datum_is_zero(second, target_oid, collid))
-                ereport(ERROR, ERRCODE_DIVISION_BY_ZERO, errmsg("process: division by zero"));
     Datum result;
+
+    if (datum_is_zero(second, target_oid, collid))
+        ereport(ERROR,
+            (errcode(ERRCODE_DIVISION_BY_ZERO),
+             errmsg("process: division by zero")));
+
     switch(target_oid) {
         case NUMERICOID: {
             result = DirectFunctionCall2(numeric_mod, first, second);
@@ -353,10 +397,11 @@ Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
 bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid) {
     char *predicate_string = text_to_cstring(DatumGetTextP(predicate_text));
     int32 predicate_len = strlen(predicate_string);
-
     Token tokens[10];
     ParsedPredicate parsed;
     Predicate predicate = {0};
+    bool res;
+    Datum tmp;
 
     int32 token_count = lexical_analyze(
         predicate_string,
@@ -367,7 +412,6 @@ bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid) {
     syntaxical_analize(tokens, token_count, &parsed);
     cast_predicate(&parsed, &predicate, target_oid);
 
-    bool res;
     switch(predicate.op) {
         case OP_EQ: {
             res = (cmp_op(target_oid, element, predicate.const1, collid) == 0);
@@ -395,13 +439,17 @@ bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid) {
         }
         case OP_MOD: {
             if (datum_is_zero(predicate.const1, target_oid, collid))
-                ereport(ERROR, ERRCODE_DIVISION_BY_ZERO, errmsg("process: division by zero"));
-            Datum tmp = mod_op(target_oid, element, predicate.const1, collid);
+                ereport(ERROR,
+                    (errcode(ERRCODE_DIVISION_BY_ZERO),
+                     errmsg("process: division by zero")));
+            tmp = mod_op(target_oid, element, predicate.const1, collid);
             res = (cmp_op(target_oid, tmp, predicate.const2, collid) == 0);
             break;
         }
         default: {
-            ereport(ERROR, ERRCODE_INVALID_PARAMETER_VALUE, errmsg("process: invalid operator"));
+            ereport(ERROR,
+                (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+                 errmsg("process: invalid operator")));
             break;
         }
     }

@@ -164,9 +164,9 @@ SELECT array_count_if('{-Infinity}'::real[], 'x == ''-Infinity''');
 SELECT array_count_if('{NaN}'::double precision[], 'x == ''NaN''');
 SELECT array_count_if('{-0.0}'::numeric[], 'x == 0.0');
 SELECT array_count_if(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
+SELECT array_count_if('{}'::integer[], 'x == 1');
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_count_if(NULL::integer[], 'x == 1');
-SELECT array_count_if('{}'::integer[], 'x == 1');
 SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
 
 -- НЕКОРРЕКТНЫЕ
