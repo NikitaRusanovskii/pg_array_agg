@@ -34,17 +34,17 @@ RETURNS integer
 AS 'MODULE_PATHNAME', 'array_count_if'
 LANGUAGE C STRICT IMMUTABLE;
 
---CREATE FUNCTION array_any(arr anyarray, pr text)
---RETURNS boolean
---AS 'MODULE_PATHNAME', 'array_any'
---LANGUAGE C STRICT IMMUTABLE;
---
---CREATE FUNCTION array_all(arr anyarray, pr text)
---RETURNS boolean
---AS 'MODULE_PATHNAME', 'array_all'
---LANGUAGE C STRICT IMMUTABLE;
---
---CREATE FUNCTION array_none(arr anyarray, pr text)
---RETURNS boolean
---AS 'MODULE_PATHNAME', 'array_none'
---LANGUAGE C STRICT IMMUTABLE;
+CREATE FUNCTION array_any(arr anyarray, pr text)
+RETURNS boolean
+AS 'MODULE_PATHNAME', 'array_any'
+LANGUAGE C STRICT IMMUTABLE;
+
+CREATE FUNCTION array_all(arr anyarray, pr text)
+RETURNS boolean
+AS 'MODULE_PATHNAME', 'array_all'
+LANGUAGE C STRICT IMMUTABLE;
+
+CREATE FUNCTION array_none(arr anyarray, pr text)
+RETURNS boolean
+AS 'MODULE_PATHNAME', 'array_none'
+LANGUAGE C STRICT IMMUTABLE;

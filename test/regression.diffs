@@ -1,109 +1,953 @@
 diff -U3 /home/admin/pg_array_agg/test/expected/array_agg_functions.out /home/admin/pg_array_agg/test/results/array_agg_functions.out
 --- /home/admin/pg_array_agg/test/expected/array_agg_functions.out	2026-10-22 20:18:29.962527889 +0300
-+++ /home/admin/pg_array_agg/test/results/array_agg_functions.out	2026-10-24 11:02:25.008961161 +0300
-@@ -0,0 +1,105 @@
++++ /home/admin/pg_array_agg/test/results/array_agg_functions.out	2026-10-24 11:32:13.202105245 +0300
+@@ -0,0 +1,949 @@
 +CREATE EXTENSION IF NOT EXISTS pg_array_agg;
-+--- ======================================================================================
-+-- ТЕСТЫ array_count_if:
-+-- КОРРЕКТНЫЕ
-+SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x == 1');
++CREATE EXTENSION IF NOT EXISTS pg_array_agg;
++NOTICE:  extension "pg_array_agg" already exists, skipping
++-- ============================================================
++-- A. array_count_if: количество совпадений
++-- ============================================================
++-- Пустое количество совпадений
++SELECT array_count_if(ARRAY[1, 2, 3], 'x == 100'); -- 0
 + array_count_if 
 +----------------
-+              1
++              0
 +(1 row)
 +
-+SELECT array_count_if(ARRAY[1, 1], 'x == 1');
-+ array_count_if 
-+----------------
-+              2
-+(1 row)
-+
-+SELECT array_count_if(ARRAY[2], 'x == 2');
-+ array_count_if 
-+----------------
-+              1
-+(1 row)
-+
-+SELECT array_count_if('{1, 2, 1, 3}'::integer[], 'x == 1');
-+ array_count_if 
-+----------------
-+              2
-+(1 row)
-+
-+SELECT array_count_if('{1, 2, 3, 4}'::integer[], 'x > 1');
++-- Все элементы совпадают
++SELECT array_count_if(ARRAY[1, 1, 1], 'x == 1'); -- 3
 + array_count_if 
 +----------------
 +              3
 +(1 row)
 +
-+SELECT array_count_if('{1, 2}'::integer[], 'x == 3');
++-- Ни одного совпадения
++SELECT array_count_if(ARRAY[1, 2, 3], 'x == 4'); -- 0
 + array_count_if 
 +----------------
 +              0
 +(1 row)
 +
-+SELECT array_count_if('{Infinity}'::numeric[], 'x == ''Infinity''');
++-- Одно совпадение
++SELECT array_count_if(ARRAY[1, 2, 3], 'x == 2'); -- 1
 + array_count_if 
 +----------------
 +              1
 +(1 row)
 +
-+SELECT array_count_if('{-Infinity}'::real[], 'x == ''-Infinity''');
++-- Несколько совпадений
++SELECT array_count_if(ARRAY[1, 2, 1, 3, 1], 'x == 1'); -- 3
 + array_count_if 
 +----------------
-+              1
++              3
 +(1 row)
 +
-+SELECT array_count_if('{NaN}'::double precision[], 'x == ''NaN''');
-+ array_count_if 
-+----------------
-+              1
-+(1 row)
-+
-+SELECT array_count_if('{-0.0}'::numeric[], 'x == 0.0');
-+ array_count_if 
-+----------------
-+              1
-+(1 row)
-+
-+SELECT array_count_if(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
++-- Сравнения
++SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x > 2');  -- 2
 + array_count_if 
 +----------------
 +              2
 +(1 row)
 +
-+-- ДОЛЖНЫ ВЕРНУТЬ NULL
-+SELECT array_count_if(NULL::integer[], 'x == 1');
++SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x < 3');  -- 2
 + array_count_if 
 +----------------
-+               
++              2
 +(1 row)
 +
-+SELECT array_count_if('{}'::integer[], 'x == 1');
++SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x >= 3'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x <= 2'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x != 3'); -- 3
++ array_count_if 
++----------------
++              3
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x == 3'); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++-- Границы диапазона
++SELECT array_count_if(ARRAY[1, 2, 3], 'x > 0'); -- 3
++ array_count_if 
++----------------
++              3
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, 3], 'x < 4'); -- 3
++ array_count_if 
++----------------
++              3
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, 3], 'x >= 3'); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, 3], 'x <= 1'); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++-- Повторяющиеся элементы
++SELECT array_count_if(ARRAY[5, 5, 5, 5], 'x == 5'); -- 4
++ array_count_if 
++----------------
++              4
++(1 row)
++
++SELECT array_count_if(ARRAY[5, 5, 5, 5], 'x != 5'); -- 0
 + array_count_if 
 +----------------
 +              0
 +(1 row)
 +
-+SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
++-- ============================================================
++-- B. array_all: все ли элементы удовлетворяют условию
++-- ============================================================
++SELECT array_all(ARRAY[2, 4, 6], 'x > 0');  -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++SELECT array_all(ARRAY[2, 4, 6], 'x % 2 = 0'); -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++SELECT array_all(ARRAY[2, 4, 6], 'x < 5');  -- false
++ array_all 
++-----------
++ f
++(1 row)
++
++SELECT array_all(ARRAY[2, 4, 6], 'x != 4'); -- false
++ array_all 
++-----------
++ f
++(1 row)
++
++SELECT array_all(ARRAY[2, 4, 6], 'x == 2'); -- false
++ array_all 
++-----------
++ f
++(1 row)
++
++-- Нарушение условия в начале, середине и конце
++SELECT array_all(ARRAY[0, 2, 4], 'x > 0'); -- false
++ array_all 
++-----------
++ f
++(1 row)
++
++SELECT array_all(ARRAY[2, 0, 4], 'x > 0'); -- false
++ array_all 
++-----------
++ f
++(1 row)
++
++SELECT array_all(ARRAY[2, 4, 0], 'x > 0'); -- false
++ array_all 
++-----------
++ f
++(1 row)
++
++-- Граничные случаи
++SELECT array_all(ARRAY[1], 'x == 1'); -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++SELECT array_all(ARRAY[1], 'x != 1'); -- false
++ array_all 
++-----------
++ f
++(1 row)
++
++SELECT array_all(ARRAY[0, 0, 0], 'x == 0'); -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++-- ============================================================
++-- C. array_any: существует ли подходящий элемент
++-- ============================================================
++SELECT array_any(ARRAY[2, 4, 6], 'x > 0'); -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_any(ARRAY[1, 3, 5], 'x % 2 = 0'); -- false
++ array_any 
++-----------
++ f
++(1 row)
++
++SELECT array_any(ARRAY[1, 2, 3], 'x == 2'); -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_any(ARRAY[1, 2, 3], 'x == 4'); -- false
++ array_any 
++-----------
++ f
++(1 row)
++
++-- Совпадение в начале, середине и конце
++SELECT array_any(ARRAY[2, 3, 4], 'x == 2'); -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_any(ARRAY[1, 2, 4], 'x == 2'); -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_any(ARRAY[1, 3, 2], 'x == 2'); -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++-- Один элемент
++SELECT array_any(ARRAY[7], 'x == 7'); -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_any(ARRAY[7], 'x != 7'); -- false
++ array_any 
++-----------
++ f
++(1 row)
++
++-- ============================================================
++-- D. array_none: нет ли подходящих элементов
++-- ============================================================
++SELECT array_none(ARRAY[1, 3, 5], 'x % 2 = 0'); -- true
++ array_none 
++------------
++ t
++(1 row)
++
++SELECT array_none(ARRAY[2, 4, 6], 'x % 2 = 0'); -- false
++ array_none 
++------------
++ f
++(1 row)
++
++SELECT array_none(ARRAY[1, 2, 3], 'x == 2'); -- false
++ array_none 
++------------
++ f
++(1 row)
++
++SELECT array_none(ARRAY[1, 2, 3], 'x == 4'); -- true
++ array_none 
++------------
++ t
++(1 row)
++
++-- Совпадение в начале, середине и конце
++SELECT array_none(ARRAY[2, 3, 4], 'x == 2'); -- false
++ array_none 
++------------
++ f
++(1 row)
++
++SELECT array_none(ARRAY[1, 2, 4], 'x == 2'); -- false
++ array_none 
++------------
++ f
++(1 row)
++
++SELECT array_none(ARRAY[1, 3, 2], 'x == 2'); -- false
++ array_none 
++------------
++ f
++(1 row)
++
++-- Один элемент
++SELECT array_none(ARRAY[7], 'x != 7'); -- true
++ array_none 
++------------
++ t
++(1 row)
++
++SELECT array_none(ARRAY[7], 'x == 7'); -- false
++ array_none 
++------------
++ f
++(1 row)
++
++-- ============================================================
++-- E. Пустые массивы
++-- ============================================================
++SELECT array_count_if('{}'::integer[], 'x == 1'); -- 0
++ array_count_if 
++----------------
++              0
++(1 row)
++
++SELECT array_all('{}'::integer[], 'x == 1');       -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++SELECT array_any('{}'::integer[], 'x == 1');       -- false
++ array_any 
++-----------
++ f
++(1 row)
++
++SELECT array_none('{}'::integer[], 'x == 1');      -- true
++ array_none 
++------------
++ t
++(1 row)
++
++-- Пустые массивы разных типов
++SELECT array_count_if('{}'::smallint[], 'x == 1'); -- 0
++ array_count_if 
++----------------
++              0
++(1 row)
++
++SELECT array_count_if('{}'::bigint[], 'x == 1');   -- 0
++ array_count_if 
++----------------
++              0
++(1 row)
++
++SELECT array_count_if('{}'::numeric[], 'x == 1');  -- 0
++ array_count_if 
++----------------
++              0
++(1 row)
++
++SELECT array_count_if('{}'::text[], 'x == "a"');   -- 0
++ array_count_if 
++----------------
++              0
++(1 row)
++
++-- ============================================================
++-- F. NULL в аргументах
++-- ============================================================
++SELECT array_count_if(NULL::integer[], 'x == 1'); -- NULL
 + array_count_if 
 +----------------
 +               
 +(1 row)
 +
-+-- НЕКОРРЕКТНЫЕ
-+SELECT array_count_if(ARRAY[[1, 2], [3, 4]], 'x == 1');
-+ERROR:  array_count_if: searching elements in manydimensional arrays is not supported yet
-+SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > ''a''');
-+ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
-+SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 1');
-+ERROR:  syntaxical_analize: Invalid first operator: 1
-+SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
-+ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
-+SELECT array_count_if(ARRAY[1, 2, 3], 'x == ''abc''');
-+ERROR:  invalid input syntax for type integer: "abc"
-+SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
-+ERROR:  process: division by zero
++SELECT array_all(NULL::integer[], 'x == 1');      -- NULL
++ array_all 
++-----------
++ 
++(1 row)
++
++SELECT array_any(NULL::integer[], 'x == 1');      -- NULL
++ array_any 
++-----------
++ 
++(1 row)
++
++SELECT array_none(NULL::integer[], 'x == 1');     -- NULL
++ array_none 
++------------
++ 
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2], NULL::text); -- NULL
++ array_count_if 
++----------------
++               
++(1 row)
++
++SELECT array_all(ARRAY[1, 2], NULL::text);      -- NULL
++ array_all 
++-----------
++ 
++(1 row)
++
++SELECT array_any(ARRAY[1, 2], NULL::text);      -- NULL
++ array_any 
++-----------
++ 
++(1 row)
++
++SELECT array_none(ARRAY[1, 2], NULL::text);     -- NULL
++ array_none 
++------------
++ 
++(1 row)
++
++-- ============================================================
++-- G. Числовые типы
++-- ============================================================
++-- smallint
++SELECT array_count_if(ARRAY[1, 2, 3]::smallint[], 'x > 1'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_all(ARRAY[1, 2, 3]::smallint[], 'x > 0');      -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++SELECT array_any(ARRAY[1, 2, 3]::smallint[], 'x == 3');     -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_none(ARRAY[1, 2, 3]::smallint[], 'x == 4');    -- true
++ array_none 
++------------
++ t
++(1 row)
++
++-- integer
++SELECT array_count_if(ARRAY[-2, -1, 0, 1, 2], 'x < 0'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++-- bigint
++SELECT array_count_if(
++    ARRAY[-9223372036854775808, 9223372036854775807]::bigint[],
++    'x > 0'
++); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++-- numeric
++SELECT array_count_if(ARRAY[1.1, 2.2, 3.3]::numeric[], 'x > 2'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_all(ARRAY[1.1, 2.2, 3.3]::numeric[], 'x > 0');     -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++-- real
++SELECT array_count_if(ARRAY[1.5, 2.5, 3.5]::real[], 'x > 2'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++-- double precision
++SELECT array_count_if(
++    ARRAY[1.25, 2.5, 5.0]::double precision[],
++    'x >= 2.5'
++); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++-- ============================================================
++-- H. Отрицательные числа, ноль и modulo
++-- ============================================================
++SELECT array_count_if(ARRAY[-5, -4, -3, 3, 4, 5], 'x % 2 = 0'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_all(ARRAY[-4, -2, 0, 2, 4], 'x % 2 = 0');          -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++SELECT array_any(ARRAY[1, 3, 5, 8], 'x % 2 = 0');               -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_none(ARRAY[1, 3, 5, 7], 'x % 2 = 0');              -- true
++ array_none 
++------------
++ t
++(1 row)
++
++SELECT array_count_if(ARRAY[-3, -2, -1, 0, 1, 2, 3], 'x == 0'); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if(ARRAY[-3, -2, -1, 0, 1, 2, 3], 'x != 0'); -- 6
++ array_count_if 
++----------------
++              6
++(1 row)
++
++-- ============================================================
++-- I. Граничные значения целочисленных типов
++-- ============================================================
++SELECT array_count_if(
++    ARRAY[-32768, 32767]::smallint[],
++    'x < 0'
++); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if(
++    ARRAY[-2147483648, 2147483647]::integer[],
++    'x < 0'
++); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if(
++    ARRAY[-9223372036854775808, 9223372036854775807]::bigint[],
++    'x < 0'
++); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++-- ============================================================
++-- J. Строки
++-- ============================================================
++SELECT array_count_if(ARRAY['a', 'b', 'a']::text[], 'x == "a"'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_all(ARRAY['a', 'a', 'a']::text[], 'x == "a"');      -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++SELECT array_any(ARRAY['b', 'c', 'a']::text[], 'x == "a"');      -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_none(ARRAY['a', 'b', 'c']::text[], 'x == "z"');     -- true
++ array_none 
++------------
++ t
++(1 row)
++
++SELECT array_count_if(ARRAY['', 'a', 'ab', 'a']::text[], 'x == "a"'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_count_if(ARRAY['NULL', 'null', 'NULL']::text[], 'x == "NULL"'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++-- ============================================================
++-- K. Специальные числовые значения
++-- ============================================================
++SELECT array_count_if('{Infinity}'::numeric[], 'x == ''Infinity'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{-Infinity}'::numeric[], 'x == ''-Infinity'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{NaN}'::numeric[], 'x == ''NaN'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{Infinity}'::real[], 'x == ''Infinity'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{-Infinity}'::real[], 'x == ''-Infinity'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{NaN}'::real[], 'x == ''NaN'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{Infinity}'::double precision[], 'x == ''Infinity'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{-Infinity}'::double precision[], 'x == ''-Infinity'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{NaN}'::double precision[], 'x == ''NaN'''); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{-0.0}'::numeric[], 'x == 0.0'); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if('{0.0}'::numeric[], 'x == -0.0'); -- 1
++ array_count_if 
++----------------
++              1
++(1 row)
++
++-- ============================================================
++-- L. Непустые массивы с нестандартными нижними границами
++-- ============================================================
++SELECT array_count_if('[0:2]={1,2,1}'::integer[], 'x == 1'); -- 2
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_all('[0:2]={1,2,3}'::integer[], 'x > 0');        -- true
++ array_all 
++-----------
++ t
++(1 row)
++
++SELECT array_any('[5:7]={1,2,3}'::integer[], 'x == 2');      -- true
++ array_any 
++-----------
++ t
++(1 row)
++
++SELECT array_none('[5:7]={1,2,3}'::integer[], 'x == 4');     -- true
++ array_none 
++------------
++ t
++(1 row)
++
++-- Одно NULL-значение
++SELECT array_count_if(ARRAY[1, NULL, 2], 'x > 1');
++ array_count_if 
++----------------
++               
++(1 row)
++
++SELECT array_all(ARRAY[1, NULL, 2], 'x > 0');
++ array_all 
++-----------
++ 
++(1 row)
++
++SELECT array_any(ARRAY[1, NULL, 2], 'x == 1');
++ array_any 
++-----------
++ 
++(1 row)
++
++SELECT array_none(ARRAY[1, NULL, 2], 'x == 3');
++ array_none 
++------------
++ 
++(1 row)
++
++-- Только NULL-элементы
++SELECT array_count_if(ARRAY[NULL, NULL]::integer[], 'x == 1');
++ array_count_if 
++----------------
++               
++(1 row)
++
++SELECT array_all(ARRAY[NULL, NULL]::integer[], 'x == 1');
++ array_all 
++-----------
++ 
++(1 row)
++
++SELECT array_any(ARRAY[NULL, NULL]::integer[], 'x == 1');
++ array_any 
++-----------
++ 
++(1 row)
++
++SELECT array_none(ARRAY[NULL, NULL]::integer[], 'x == 1');
++ array_none 
++------------
++ 
++(1 row)
++
++-- NULL в начале и в конце
++SELECT array_count_if(ARRAY[NULL, 1, 2]::integer[], 'x > 0');
++ array_count_if 
++----------------
++               
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, NULL]::integer[], 'x > 0');
++ array_count_if 
++----------------
++               
++(1 row)
++
++-- ============================================================
++-- A. Неподдерживаемые типы
++-- ============================================================
 +SELECT array_count_if(ARRAY[true, false], 'x == 1');
 +ERROR:  array_count_if: incorrect datatype
++SELECT array_all(ARRAY[true, false], 'x == 1');
++ERROR:  array_all: incorrect datatype
++SELECT array_any(ARRAY[true, false], 'x == 1');
++ERROR:  array_any: incorrect datatype
++SELECT array_none(ARRAY[true, false], 'x == 1');
++ERROR:  array_none: incorrect datatype
++-- Массивы неподдерживаемых составных типов, если они не реализованы
++SELECT array_count_if(ARRAY[DATE '2026-01-01'], 'x == 1');
++ERROR:  array_count_if: incorrect datatype
++-- ============================================================
++-- B. Многомерные массивы
++-- ============================================================
++SELECT array_count_if(ARRAY[[1, 2], [3, 4]], 'x == 1');
++ERROR:  array_count_if: searching elements in manydimensional arrays is not supported yet
++SELECT array_all(ARRAY[[1, 2], [3, 4]], 'x == 1');
++ERROR:  array_all: searching elements in manydimensional arrays is not supported yet
++SELECT array_any(ARRAY[[1, 2], [3, 4]], 'x == 1');
++ERROR:  array_any: searching elements in manydimensional arrays is not supported yet
++SELECT array_none(ARRAY[[1, 2], [3, 4]], 'x == 1');
++ERROR:  array_none: searching elements in manydimensional arrays is not supported yet
++-- ============================================================
++-- C. Некорректный синтаксис
++-- ============================================================
++SELECT array_count_if(ARRAY[1, 2], '');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 1
++SELECT array_count_if(ARRAY[1, 2], 'x');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 2
++SELECT array_count_if(ARRAY[1, 2], 'x ==');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
++SELECT array_count_if(ARRAY[1, 2], '== 1');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
++SELECT array_count_if(ARRAY[1, 2], 'x @@@ 1');
++ERROR:  syntaxical_analize: Invalid first operator: 1
++SELECT array_count_if(ARRAY[1, 2], 'x == 1 extra');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 5
++SELECT array_count_if(ARRAY[1, 2], 'x === 1');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 5
++SELECT array_count_if(ARRAY[1, 2], 'x !=');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
++-- Некорректный синтаксис modulo
++SELECT array_count_if(ARRAY[1, 2], 'x %');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
++SELECT array_count_if(ARRAY[1, 2], 'x % 2');
++ERROR:  syntaxical_analize: Invalid first operator: 9
++SELECT array_count_if(ARRAY[1, 2], 'x % 2 =');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 5
++SELECT array_count_if(ARRAY[1, 2], 'x % 2 == 0');
++ERROR:  syntaxical_analize: Invalid second operator: 3
++SELECT array_count_if(ARRAY[1, 2], 'x % 2 = 0 extra');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 7
++-- ============================================================
++-- D. Ошибки преобразования константы
++-- ============================================================
++SELECT array_count_if(ARRAY[1, 2], 'x == "abc"');
++ERROR:  invalid input syntax for type integer: "abc"
++SELECT array_count_if(ARRAY[1, 2], 'x == ''not_a_number''');
++ERROR:  invalid input syntax for type integer: "not_a_number"
++SELECT array_count_if(ARRAY[1, 2], 'x == 999999999999999999999999999999999999');
++ERROR:  value "999999999999999999999999999999999999" is out of range for type integer
++-- ============================================================
++-- E. Недопустимые операторы для типов
++-- ============================================================
++SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > "a"');
++ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
++SELECT array_count_if(ARRAY['a', 'b']::text[], 'x < "b"');
++ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 3
++SELECT array_count_if(ARRAY['a', 'b']::text[], 'x >= "a"');
++ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 4
++SELECT array_count_if(ARRAY['a', 'b']::text[], 'x <= "b"');
++ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 5
++SELECT array_count_if(ARRAY['a', 'b']::text[], 'x % 2 = 0');
++ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 6
++-- ============================================================
++-- F. Деление по модулю на ноль
++-- ============================================================
++SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
++ERROR:  process: division by zero
++SELECT array_all(ARRAY[1, 2, 3], 'x % 0 = 0');
++ERROR:  process: division by zero
++SELECT array_any(ARRAY[1, 2, 3], 'x % 0 = 0');
++ERROR:  process: division by zero
++SELECT array_none(ARRAY[1, 2, 3], 'x % 0 = 0');
++ERROR:  process: division by zero
++-- ============================================================
++-- G. Неверные типы констант
++-- ============================================================
++SELECT array_count_if(ARRAY[1, 2], 'x == "1"');
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if(ARRAY[1.5, 2.5]::numeric[], 'x == "abc"');
++ERROR:  invalid input syntax for type numeric: "abc"
++-- ============================================================
++-- H. Другие формы некорректных выражений
++-- ============================================================
++SELECT array_count_if(ARRAY[1, 2], 'y == 1');
++ERROR:  syntaxical_analize: Invalid token array. First token is not variable
++SELECT array_count_if(ARRAY[1, 2], 'x + 1 == 2');
++ERROR:  syntaxical_analize: Invalid token array len: 6
++SELECT array_count_if(ARRAY[1, 2], 'x == 1 = 1');
++ERROR:  syntaxical_analize: Invalid token array len: 6
++SELECT array_count_if(ARRAY[1, 2], 'x % 2 = 0 = 1');
++ERROR:  syntaxical_analize: Invalid token array format. Array len: 8
++-- INT_MIN % -1: ожидается определённая ошибка,
++-- если такой случай запрещён реализацией.
++SELECT array_count_if(
++    ARRAY[-2147483648]::integer[],
++    'x % -1 = 0'
++);
++ERROR:  floating-point exception
++DETAIL:  An invalid floating-point operation was signaled. This probably means an out-of-range result or an invalid operation, such as division by zero.
++-- Проверки modulo для разных целочисленных типов
++SELECT array_count_if(ARRAY[-5, -4, -3, 0, 3, 4, 5], 'x % 2 = 0');
++ array_count_if 
++----------------
++              3
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x % 3 = 1');
++ array_count_if 
++----------------
++              2
++(1 row)
++
++SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x % 3 = 0');
++ array_count_if 
++----------------
++              1
++(1 row)
++
++SELECT array_count_if(
++    ARRAY[-5, -4, -3, 0, 3, 4, 5]::bigint[],
++    'x % 2 = 0'
++);
++ array_count_if 
++----------------
++              3
++(1 row)
++
++SELECT array_count_if(
++    ARRAY[1.5, 2.0, 2.5, 3.0]::numeric[],
++    'x % 1 = 0'
++);
++ array_count_if 
++----------------
++              2
++(1 row)
++
++-- Число подходящих элементов равно array_count_if.
++SELECT
++    array_count_if(ARRAY[1, 2, 3, 4], 'x > 2') AS cnt,
++    array_all(ARRAY[1, 2, 3, 4], 'x > 2') AS all_result,
++    array_any(ARRAY[1, 2, 3, 4], 'x > 2') AS any_result,
++    array_none(ARRAY[1, 2, 3, 4], 'x > 2') AS none_result;
++ cnt | all_result | any_result | none_result 
++-----+------------+------------+-------------
++   2 | f          | t          | f
++(1 row)
++
++-- Все подходят: count = cardinality, all = true, any = true, none = false.
++SELECT
++    array_count_if(ARRAY[2, 2, 2], 'x == 2') AS cnt,
++    array_all(ARRAY[2, 2, 2], 'x == 2') AS all_result,
++    array_any(ARRAY[2, 2, 2], 'x == 2') AS any_result,
++    array_none(ARRAY[2, 2, 2], 'x == 2') AS none_result;
++ cnt | all_result | any_result | none_result 
++-----+------------+------------+-------------
++   3 | t          | t          | f
++(1 row)
++
++-- Ни один не подходит: count = 0, all = false, any = false, none = true.
++SELECT
++    array_count_if(ARRAY[1, 2, 3], 'x == 9') AS cnt,
++    array_all(ARRAY[1, 2, 3], 'x == 9') AS all_result,
++    array_any(ARRAY[1, 2, 3], 'x == 9') AS any_result,
++    array_none(ARRAY[1, 2, 3], 'x == 9') AS none_result;
++ cnt | all_result | any_result | none_result 
++-----+------------+------------+-------------
++   0 | f          | f          | t
++(1 row)
++
++SELECT array_count_if(
++    ARRAY(SELECT generate_series(1, 65000000)),
++    'x % 2 = 0'
++);
++ array_count_if 
++----------------
++       32500000
++(1 row)
++
++-- Ожидается: 34000000
 +DROP EXTENSION IF EXISTS pg_array_agg;
