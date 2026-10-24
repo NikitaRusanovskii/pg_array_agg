@@ -325,6 +325,7 @@ int32 cmp_op(Oid target_oid, Datum first, Datum second, Oid collid) {
 
 bool datum_is_zero(Datum value, Oid type_oid, Oid collid) {
     Datum zero;
+    bool res;
     switch (type_oid) {
         case INT2OID:
             zero = Int16GetDatum(0);
@@ -351,7 +352,9 @@ bool datum_is_zero(Datum value, Oid type_oid, Oid collid) {
             zero = (Datum) 0;
             break;
     }
-    return cmp_op(type_oid, value, zero, collid) == 0;
+    res = cmp_op(type_oid, value, zero, collid) == 0;
+    if (type_oid == NUMERICOID) pfree(DatumGetPointer(zero));
+    return res;
 }
 
 
@@ -396,14 +399,11 @@ Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
     return result;
 }
 
-bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid) {
+void prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predicate, Oid collid) {
     char *predicate_string = text_to_cstring(DatumGetTextP(predicate_text));
     int32 predicate_len = strlen(predicate_string);
     Token tokens[10];
     ParsedPredicate parsed;
-    Predicate predicate = {0};
-    bool res;
-    Datum tmp;
 
     int32 token_count = lexical_analyze(
         predicate_string,
@@ -412,49 +412,71 @@ bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid) {
         lengthof(tokens) - 1
     );
     syntaxical_analize(tokens, token_count, &parsed);
-    cast_predicate(&parsed, &predicate, target_oid);
+    cast_predicate(&parsed, predicate, target_oid);
 
-    switch(predicate.op) {
+    if (predicate->predicate_type == MOD)
+    if (datum_is_zero(predicate->const1, target_oid, collid))
+                ereport(ERROR,
+                    (errcode(ERRCODE_DIVISION_BY_ZERO),
+                     errmsg("execute_predicate: division by zero")));
+
+    pfree(predicate_string);
+}
+bool execute_predicate(Predicate* predicate, Datum element, Oid target_oid, Oid collid) {
+    bool res;
+    Datum tmp;
+    switch(predicate->op) {
         case OP_EQ: {
-            res = (cmp_op(target_oid, element, predicate.const1, collid) == 0);
+            res = (cmp_op(target_oid, element, predicate->const1, collid) == 0);
             break;
         }
         case OP_NEQ: {
-            res = (cmp_op(target_oid, element, predicate.const1, collid) != 0);
+            res = (cmp_op(target_oid, element, predicate->const1, collid) != 0);
             break;
         }
         case OP_GR: {
-            res = (cmp_op(target_oid, element, predicate.const1, collid) > 0);
+            res = (cmp_op(target_oid, element, predicate->const1, collid) > 0);
             break;
         }
         case OP_GRE: {
-            res = (cmp_op(target_oid, element, predicate.const1, collid) >= 0);
+            res = (cmp_op(target_oid, element, predicate->const1, collid) >= 0);
             break;
         }
         case OP_LE: {
-            res = (cmp_op(target_oid, element, predicate.const1, collid) < 0);
+            res = (cmp_op(target_oid, element, predicate->const1, collid) < 0);
             break;
         }
         case OP_LEE: {
-            res = (cmp_op(target_oid, element, predicate.const1, collid) <= 0);
+            res = (cmp_op(target_oid, element, predicate->const1, collid) <= 0);
             break;
         }
         case OP_MOD: {
-            if (datum_is_zero(predicate.const1, target_oid, collid))
-                ereport(ERROR,
-                    (errcode(ERRCODE_DIVISION_BY_ZERO),
-                     errmsg("process: division by zero")));
-            tmp = mod_op(target_oid, element, predicate.const1, collid);
-            res = (cmp_op(target_oid, tmp, predicate.const2, collid) == 0);
+            tmp = mod_op(target_oid, element, predicate->const1, collid);
+            res = (cmp_op(target_oid, tmp, predicate->const2, collid) == 0);
+            if (target_oid == NUMERICOID) pfree(DatumGetPointer(tmp));
             break;
         }
         default: {
             ereport(ERROR,
                 (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                 errmsg("process: invalid operator")));
+                 errmsg("execute_predicate: invalid operator")));
             break;
         }
     }
     return res;
+}
+void free_predicate(Predicate* predicate) {
+    int16 typlen;
+    bool typbyval;
 
+    if(!predicate) return;
+    get_typlenbyval(predicate->target_oid, &typlen, &typbyval);
+
+    if(typbyval) return;
+    if (predicate->const1) {
+        pfree(DatumGetPointer(predicate->const1));
+    }
+    if (predicate->const2 && predicate->predicate_type == MOD) {
+        pfree(DatumGetPointer(predicate->const2));
+    }
 }

@@ -118,7 +118,7 @@ SELECT array_max('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
 SELECT array_max(ARRAY[[1, 2], [3, 4]]);
-SELECT array_max(ARRAY['a', 'b']::boolean[]);
+SELECT array_max(ARRAY[true, false]::boolean[]);
 
 --- ======================================================================================
 -- ТЕСТЫ array_count:

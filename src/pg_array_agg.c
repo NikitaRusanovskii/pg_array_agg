@@ -75,10 +75,13 @@ Datum array_product(PG_FUNCTION_ARGS) {
         }
 
         res = numeric_mul_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
-        if(err) ereport(ERROR,
+        if(err) {
+            PG_FREE_IF_COPY(arr, 0);
+            array_free_iterator(arr_it);        
+            ereport(ERROR,
             (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
              errmsg("array_product: An error occurred during a numeric multiplication.")));
-
+        }
     }
 
     PG_FREE_IF_COPY(arr, 0);
@@ -131,9 +134,13 @@ Datum array_sum(PG_FUNCTION_ARGS) {
         }
 
         res = numeric_add_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
-        if(err) ereport(ERROR,
+        if(err) {
+            PG_FREE_IF_COPY(arr, 0);
+            array_free_iterator(arr_it);        
+            ereport(ERROR,
             (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-             errmsg("array_sum: An error occurred during a numeric sum.")));
+             errmsg("array_sum: An error occurred during a numeric sum")));
+        }
 
     }
 
@@ -150,7 +157,8 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     Datum elem;
     bool is_null;
     Numeric res;
-    Numeric count;
+    Numeric total;
+    int64 count;
     bool err = false;
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
@@ -172,7 +180,10 @@ Datum array_avg(PG_FUNCTION_ARGS) {
              errmsg("array_avg: Invalid elemtype of array. OID: %d", arr->elemtype)));
     }
 
-    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0) PG_RETURN_NULL();
+    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0){
+        PG_FREE_IF_COPY(arr, 0);
+        PG_RETURN_NULL();
+    }
 
     arr_it = array_create_iterator(arr, 0, NULL);
 
@@ -180,7 +191,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
 
     //результирующая переменная, тут накопим результат сложений. Инициализируем её значением 0
     res = int64_to_numeric(0);
-    count = int64_to_numeric(0); // будем считать кол-во элементов самостоятельно, так как если изменится поведение относительно NULL элементов, ручной подсчёт более гибкий
+    count = 0; // будем считать кол-во элементов самостоятельно, так как если изменится поведение относительно NULL элементов, ручной подсчёт более гибкий
 
     while(array_iterate(arr_it, &elem, &is_null)) {
 
@@ -191,21 +202,21 @@ Datum array_avg(PG_FUNCTION_ARGS) {
         }
 
         res = numeric_add_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
-        if(err) ereport(ERROR,
+        if(err) {
+            ereport(ERROR,
             (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
              errmsg("array_avg: An error occurred during a numeric sum.")));
-
-        count = numeric_add_opt_error(count, int64_to_numeric(1), &err); // есть ли способ проще? инкремент?
-        if(err) ereport(ERROR,
-            (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-             errmsg("array_avg: An error occurred during a numeric sum.")));
+        }
+        count++;
     }
 
     PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
-    res = numeric_div_opt_error(res, count, &err);
-
-    if (err) ereport(ERROR,
+    total = int64_to_numeric(count);
+    res = numeric_div_opt_error(res, total, &err);
+    pfree(total);
+    if (err)      
+        ereport(ERROR,
         (errcode(ERRCODE_DIVISION_BY_ZERO),
          errmsg("array_avg: Division by zero error")));
 
@@ -231,16 +242,19 @@ Datum array_min(PG_FUNCTION_ARGS) {
     if (ARR_NDIM(arr) > 1) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-             errmsg("Invalid ndim of array: %d", ARR_NDIM(arr))));
+             errmsg("array_min: Invalid ndim of array: %d", ARR_NDIM(arr))));
     }
 
     if (!type_is_expected(arr->elemtype, expected_types, 6)) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-             errmsg("Invalid elemtype of array. OID: %d", arr->elemtype)));
+             errmsg("array_min: Invalid elemtype of array. OID: %d", arr->elemtype)));
     }
 
-    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0) PG_RETURN_NULL();
+    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0){
+        PG_FREE_IF_COPY(arr, 0);
+        PG_RETURN_NULL();
+    }
 
     arr_it = array_create_iterator(arr, 0, NULL);
 
@@ -296,7 +310,10 @@ Datum array_max(PG_FUNCTION_ARGS) {
              errmsg("array_max: Invalid elemtype of array. OID: %d", arr->elemtype)));
     }
 
-    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0) PG_RETURN_NULL();
+    if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0){
+        PG_FREE_IF_COPY(arr, 0);
+        PG_RETURN_NULL();
+    }
 
     arr_it = array_create_iterator(arr, 0, NULL);
 
@@ -313,6 +330,7 @@ Datum array_max(PG_FUNCTION_ARGS) {
         if (is_first){
             res = elem;
             is_first = false;
+            continue;
         }
 
         if (cmp_op(arr->elemtype, res, elem, PG_GET_COLLATION()) < 0) res = elem;
@@ -361,15 +379,16 @@ Datum array_count(PG_FUNCTION_ARGS) {
     while(array_iterate(arr_it, &elem, &is_null)) {
 
         if (is_null) {
-            PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
-            array_free_iterator(arr_it);
-            PG_RETURN_NULL();
+            //PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+            //array_free_iterator(arr_it);
+            //PG_RETURN_INT32(0);
+            continue;
         }
 
         if (cmp_op(arr->elemtype, element, elem, PG_GET_COLLATION()) == 0) result++;
 
     }
-
+    PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
     PG_RETURN_INT32(result);
 }
@@ -379,6 +398,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     Oid collation = PG_GET_COLLATION();
     Oid elemtype;
     Datum predicate;
+    Predicate compiled_predicate;
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
@@ -404,18 +424,24 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     result = 0;
     iterator = array_create_iterator(arr, 0, NULL);
 
+    prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
-            PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
-            array_free_iterator(iterator);
-            PG_RETURN_NULL();
+            //PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+            //PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
+            //array_free_iterator(iterator);
+            //free_predicate(&compiled_predicate);
+            //PG_RETURN_NULL();
+            continue;
         }
 
-        if (process(current_element, predicate,elemtype, collation)) result++;
+        if (execute_predicate(&compiled_predicate, current_element,elemtype, collation)) result++;
     }
 
     PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+    PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
+    free_predicate(&compiled_predicate);
     PG_RETURN_INT32(result);
 }
 
@@ -425,6 +451,7 @@ Datum array_any(PG_FUNCTION_ARGS) {
     Oid collation = PG_GET_COLLATION();
     Oid elemtype;
     Datum predicate;
+    Predicate compiled_predicate;
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
@@ -448,22 +475,30 @@ Datum array_any(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
+    prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
-            PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
-            array_free_iterator(iterator);
-            PG_RETURN_NULL();
+            //PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+            //PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
+            //array_free_iterator(iterator);
+            //free_predicate(&compiled_predicate);
+            //PG_RETURN_NULL();
+            continue;
         }
 
-        if (process(current_element, predicate,elemtype, collation)) {
+        if (execute_predicate(&compiled_predicate, current_element,elemtype, collation)) {
             PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+            PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
             array_free_iterator(iterator);
+            free_predicate(&compiled_predicate);
             PG_RETURN_BOOL(true);
         }
     }
 
     PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+    PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
+    free_predicate(&compiled_predicate);
     PG_RETURN_BOOL(false);
 }
 
@@ -472,6 +507,7 @@ Datum array_all(PG_FUNCTION_ARGS) {
     Oid collation = PG_GET_COLLATION();
     Oid elemtype;
     Datum predicate;
+    Predicate compiled_predicate;
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
@@ -495,22 +531,30 @@ Datum array_all(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
+    prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
-            PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
-            array_free_iterator(iterator);
-            PG_RETURN_NULL();
+            //PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+            //PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
+            //array_free_iterator(iterator);
+            //free_predicate(&compiled_predicate);
+            //PG_RETURN_NULL();
+            continue;
         }
 
-        if (!process(current_element, predicate,elemtype, collation)){
+        if (!execute_predicate(&compiled_predicate, current_element,elemtype, collation)){
             PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+            PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
             array_free_iterator(iterator);
+            free_predicate(&compiled_predicate);
             PG_RETURN_BOOL(false);
         }
     }
 
     PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+    PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
+    free_predicate(&compiled_predicate);
     PG_RETURN_BOOL(true);
 }
 
@@ -519,6 +563,7 @@ Datum array_none(PG_FUNCTION_ARGS) {
     Oid collation = PG_GET_COLLATION();
     Oid elemtype;
     Datum predicate;
+    Predicate compiled_predicate;
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
@@ -542,22 +587,30 @@ Datum array_none(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
+    prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
 
-            PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
-            array_free_iterator(iterator);
-            PG_RETURN_NULL();
+            //PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+            //PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
+            //array_free_iterator(iterator);
+            //free_predicate(&compiled_predicate);
+            //PG_RETURN_NULL();
+            continue;
         }
 
-        if (process(current_element, predicate,elemtype, collation)){
+        if (execute_predicate(&compiled_predicate, current_element, elemtype, collation)){
             PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+            PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
             array_free_iterator(iterator);
+            free_predicate(&compiled_predicate);
             PG_RETURN_BOOL(false);
         }
     }
 
     PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+    PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
+    free_predicate(&compiled_predicate);
     PG_RETURN_BOOL(true);
 }
