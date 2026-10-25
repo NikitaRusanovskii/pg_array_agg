@@ -181,7 +181,6 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
     return token_position;
 }
 
-// синтаксический разбор
 int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predicate) {
     // %: x op const = const 5 токенов + конечный = 6 токенов
     // др: x op const
@@ -271,8 +270,6 @@ int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predi
     return 0;
 }
 
-// проверить допустимость операций
-// привести предикат к нужному виду
 
 void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) {
     if (parsed == NULL)

@@ -1,0 +1,27 @@
+
+┌──(admin㉿DESKTOP-NNMFN20)-[~/pg_array_agg]
+└─$ make installcheck REGRESS= TAP_TESTS=1 PROVE_TESTS='t/001_transactions.pl'
+echo "# +++ tap install-check in  +++" && rm -rf '/home/admin/pg_array_agg'/tmp_check && /usr/bin/mkdir -p '/home/admin/pg_array_agg'/tmp_check && cd ./ && TESTLOGDIR='/home/admin/pg_array_agg/tmp_check/log' TESTDATADIR='/home/admin/pg_array_agg/tmp_check' PATH="/home/admin/PostgresRepo/Build/PostgreSQL_17_11/bin:/home/admin/pg_array_agg:$PATH" PGPORT='65432' PG_REGRESS='/home/admin/PostgresRepo/Build/PostgreSQL_17_11/lib/postgresql/pgxs/src/makefiles/../../src/test/regress/pg_regress' /usr/bin/prove -I /home/admin/PostgresRepo/Build/PostgreSQL_17_11/lib/postgresql/pgxs/src/makefiles/../../src/test/perl/ -I ./  t/001_transactions.pl
+# +++ tap install-check in  +++
+t/001_transactions.pl .. ok
+All tests successful.
+Files=1, Tests=2,  2 wallclock secs ( 0.02 usr  0.00 sys +  1.12 cusr  0.44 csys =  1.58 CPU)
+Result: PASS
+
+┌──(admin㉿DESKTOP-NNMFN20)-[~/pg_array_agg]
+└─$ make installcheck REGRESS= TAP_TESTS=1 PROVE_TESTS='t/002_parallel.pl'
+echo "# +++ tap install-check in  +++" && rm -rf '/home/admin/pg_array_agg'/tmp_check && /usr/bin/mkdir -p '/home/admin/pg_array_agg'/tmp_check && cd ./ && TESTLOGDIR='/home/admin/pg_array_agg/tmp_check/log' TESTDATADIR='/home/admin/pg_array_agg/tmp_check' PATH="/home/admin/PostgresRepo/Build/PostgreSQL_17_11/bin:/home/admin/pg_array_agg:$PATH" PGPORT='65432' PG_REGRESS='/home/admin/PostgresRepo/Build/PostgreSQL_17_11/lib/postgresql/pgxs/src/makefiles/../../src/test/regress/pg_regress' /usr/bin/prove -I /home/admin/PostgresRepo/Build/PostgreSQL_17_11/lib/postgresql/pgxs/src/makefiles/../../src/test/perl/ -I ./  t/002_parallel.pl
+# +++ tap install-check in  +++
+t/002_parallel.pl .. ok
+All tests successful.
+Files=1, Tests=1,  2 wallclock secs ( 0.01 usr  0.00 sys +  1.23 cusr  0.53 csys =  1.77 CPU)
+Result: PASS
+
+┌──(admin㉿DESKTOP-NNMFN20)-[~/pg_array_agg]
+└─$ make installcheck REGRESS= TAP_TESTS=1 PROVE_TESTS='t/003_error_query.pl'
+echo "# +++ tap install-check in  +++" && rm -rf '/home/admin/pg_array_agg'/tmp_check && /usr/bin/mkdir -p '/home/admin/pg_array_agg'/tmp_check && cd ./ && TESTLOGDIR='/home/admin/pg_array_agg/tmp_check/log' TESTDATADIR='/home/admin/pg_array_agg/tmp_check' PATH="/home/admin/PostgresRepo/Build/PostgreSQL_17_11/bin:/home/admin/pg_array_agg:$PATH" PGPORT='65432' PG_REGRESS='/home/admin/PostgresRepo/Build/PostgreSQL_17_11/lib/postgresql/pgxs/src/makefiles/../../src/test/regress/pg_regress' /usr/bin/prove -I /home/admin/PostgresRepo/Build/PostgreSQL_17_11/lib/postgresql/pgxs/src/makefiles/../../src/test/perl/ -I ./  t/003_error_query.pl
+# +++ tap install-check in  +++
+t/003_error_query.pl .. ok
+All tests successful.
+Files=1, Tests=2,  2 wallclock secs ( 0.02 usr  0.00 sys +  1.13 cusr  0.28 csys =  1.43 CPU)
+Result: PASS

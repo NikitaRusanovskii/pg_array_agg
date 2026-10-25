@@ -1,5 +1,7 @@
 EXTENSION = pg_array_agg
 
+TAP_TESTS = 1
+
 DATA = pg_array_agg--1.0.sql
 
 MODULE_big = pg_array_agg
