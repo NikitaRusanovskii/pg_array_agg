@@ -97,7 +97,7 @@ SELECT array_min('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
 SELECT array_min(ARRAY[[1, 2], [3, 4]]);
-SELECT array_min(ARRAY['a', 'b']::boolean[]);
+SELECT array_min(ARRAY[true, false]::boolean[]);
 
 --- ======================================================================================
 -- ТЕСТЫ array_max:

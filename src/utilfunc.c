@@ -36,7 +36,7 @@ Numeric datum_to_numeric(Datum element, Oid type_oid) {
             tmp = DatumGetNumeric(DirectFunctionCall1(float8_numeric, element));
             break;
         case NUMERICOID:
-            tmp = DatumGetNumeric(element);
+            tmp = (Numeric)PG_DETOAST_DATUM_COPY(element);
             break;
         default:
             ereport(ERROR,

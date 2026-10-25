@@ -38,6 +38,8 @@ Datum array_product(PG_FUNCTION_ARGS) {
     Datum elem;
     bool is_null;
     Numeric res;
+    Numeric tmp_elem;
+    Numeric tmp_res;
     bool err = false;
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
@@ -73,8 +75,10 @@ Datum array_product(PG_FUNCTION_ARGS) {
             array_free_iterator(arr_it);
             PG_RETURN_NULL();
         }
-
-        res = numeric_mul_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
+        tmp_elem = datum_to_numeric(elem, arr->elemtype);
+        tmp_res = numeric_mul_opt_error(res, tmp_elem, &err);
+        pfree(res);
+        pfree(tmp_elem);
         if(err) {
             PG_FREE_IF_COPY(arr, 0);
             array_free_iterator(arr_it);        
@@ -82,6 +86,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
             (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
              errmsg("array_product: An error occurred during a numeric multiplication.")));
         }
+        res = tmp_res;
     }
 
     PG_FREE_IF_COPY(arr, 0);
@@ -97,6 +102,8 @@ Datum array_sum(PG_FUNCTION_ARGS) {
     Datum elem;
     bool is_null;
     Numeric res;
+    Numeric tmp_elem;
+    Numeric tmp_res;
     bool err = false;
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
@@ -133,7 +140,10 @@ Datum array_sum(PG_FUNCTION_ARGS) {
             PG_RETURN_NULL();
         }
 
-        res = numeric_add_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
+        tmp_elem = datum_to_numeric(elem, arr->elemtype);
+        tmp_res = numeric_add_opt_error(res, tmp_elem, &err);
+        pfree(res);
+        pfree(tmp_elem);
         if(err) {
             PG_FREE_IF_COPY(arr, 0);
             array_free_iterator(arr_it);        
@@ -141,9 +151,8 @@ Datum array_sum(PG_FUNCTION_ARGS) {
             (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
              errmsg("array_sum: An error occurred during a numeric sum")));
         }
-
+        res = tmp_res;
     }
-
     PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
 
@@ -158,6 +167,8 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     bool is_null;
     Numeric res;
     Numeric total;
+    Numeric tmp_elem;
+    Numeric tmp_res;
     int64 count;
     bool err = false;
 
@@ -201,12 +212,16 @@ Datum array_avg(PG_FUNCTION_ARGS) {
             PG_RETURN_NULL();
         }
 
-        res = numeric_add_opt_error(res, datum_to_numeric(elem, arr->elemtype), &err); // вот здесь может быть ошибка, тогда надо освободить итератор
+        tmp_elem = datum_to_numeric(elem, arr->elemtype);
+        tmp_res = numeric_add_opt_error(res, tmp_elem, &err);
+        pfree(res);
+        pfree(tmp_elem);
         if(err) {
             ereport(ERROR,
             (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
              errmsg("array_avg: An error occurred during a numeric sum.")));
         }
+        res = tmp_res;
         count++;
     }
 
