@@ -65,13 +65,28 @@ Token construct_token(TokenType type, const char* token, int32 lenght) {
 
 int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 token_len) {
     int32 token_position = 0;
+    int32 name_start = 0;
 
     memset(result, 0, token_len * sizeof(*result));
     for (int32 i = 0; i < len; i++) {
-        if (token_position >= token_len) break; // вместо ошибки остановим цикл
+        if (token_position >= token_len) {
+            ereport(ERROR,
+                (errcode(ERRCODE_SYNTAX_ERROR),
+                 errmsg("lexical_analyze: invalid predicate string")));
+        }
         if (predicate_string[i] ==  ' ') continue;
-        else if (predicate_string[i] ==  'x' && token_position == 0) {
-            result[token_position++] = construct_token(T_VARIABLE, &predicate_string[i], 1);
+        else if (token_position == 0 && (isalpha((unsigned char)predicate_string[i]) ||
+                                        (unsigned char) predicate_string[i] == '_' ||
+                                        (i > name_start && isalnum((unsigned char)predicate_string[i])))) {
+
+            name_start = i;
+            
+            while (isalpha((unsigned char)predicate_string[i]) ||
+            (unsigned char) predicate_string[i] == '_' ||
+            (i > name_start && isalnum((unsigned char)predicate_string[i]))) i++;
+            
+            i--;
+            result[token_position++] = construct_token(T_VARIABLE, &predicate_string[name_start], i - name_start);
         }
         else if (predicate_string[i] ==  '%') {
             result[token_position++] = construct_token(T_MOD, &predicate_string[i], 1);
@@ -195,6 +210,10 @@ int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predi
         predicate->predicate_type = CMP;
         switch(parsed_tokens[op1pos].type) {
             case T_EQ: {
+                predicate->op = OP_EQ;
+                break;
+            }
+            case T_SEQ: { // по спецификации работает также как и ==, если это первый оператор
                 predicate->op = OP_EQ;
                 break;
             }
@@ -416,6 +435,10 @@ int32 prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predica
         tokens,
         lengthof(tokens) - 1
     );
+    if (token_count == 1) {// строка состоит из пробелов, значит, обработка пропускается
+        pfree(predicate_string); 
+        return 0;
+    }
     syntaxical_analize(tokens, token_count, &parsed);
     cast_predicate(&parsed, predicate, target_oid);
 

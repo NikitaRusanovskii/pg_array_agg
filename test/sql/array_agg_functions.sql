@@ -193,13 +193,13 @@ SELECT array_count_if(ARRAY[true, false], 'x == 1');
 --- ======================================================================================
 -- ТЕСТЫ array_all:
 -- КОРРЕКТНЫЕ
-SELECT array_all(ARRAY[1, 2, 3, 4], 'x == 1');
+SELECT array_all(ARRAY[1, 2, 3, 4], 'xab == 1');
 SELECT array_all(ARRAY[1, 1], 'x == 1');
-SELECT array_all(ARRAY[2], 'x == 2');
+SELECT array_all(ARRAY[2], 'x_a == 2');
 SELECT array_all('{1, 2, 1, 3}'::integer[], 'x == 1');
 SELECT array_all('{1, 2, 3, 4}'::integer[], 'x > 1');
-SELECT array_all('{1, 2}'::integer[], 'x == 3');
-SELECT array_all('{Infinity}'::numeric[], 'x == ''Infinity''');
+SELECT array_all('{1, 2}'::integer[], '_x == 3');
+SELECT array_all('{Infinity}'::numeric[], '_ == ''Infinity''');
 SELECT array_all('{-Infinity}'::real[], 'x == ''-Infinity''');
 SELECT array_all('{NaN}'::double precision[], 'x == ''NaN''');
 SELECT array_all('{-0.0}'::numeric[], 'x == 0.0');

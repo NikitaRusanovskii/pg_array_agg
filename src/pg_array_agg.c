@@ -292,7 +292,6 @@ Datum array_min(PG_FUNCTION_ARGS) {
         if (cmp_op(arr->elemtype, res, elem, PG_GET_COLLATION()) > 0) res = elem;
 
     }
-
     array_free_iterator(arr_it);
     PG_RETURN_DATUM(res);
 }
@@ -445,7 +444,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
         PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
         // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
         array_free_iterator(iterator);
-        PG_RETURN_NULL();
+        PG_RETURN_INT32(0);
     }
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
@@ -503,7 +502,7 @@ Datum array_any(PG_FUNCTION_ARGS) {
         PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
         // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
         array_free_iterator(iterator);
-        PG_RETURN_NULL();
+        PG_RETURN_BOOL(false);
     }
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
