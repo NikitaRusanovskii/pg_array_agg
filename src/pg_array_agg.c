@@ -418,6 +418,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     int32 result;
+    int pred_len;
     Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
@@ -439,7 +440,13 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     result = 0;
     iterator = array_create_iterator(arr, 0, NULL);
 
-    prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    if (pred_len == 0) {
+        PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+        // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
+        array_free_iterator(iterator);
+        PG_RETURN_NULL();
+    }
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
             //PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
@@ -470,6 +477,7 @@ Datum array_any(PG_FUNCTION_ARGS) {
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
+    int pred_len;
     Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
@@ -490,7 +498,13 @@ Datum array_any(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
-    prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    if (pred_len == 0) {
+        PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+        // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
+        array_free_iterator(iterator);
+        PG_RETURN_NULL();
+    }
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
             //PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
@@ -526,6 +540,7 @@ Datum array_all(PG_FUNCTION_ARGS) {
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
+    int pred_len;
     Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
@@ -546,7 +561,13 @@ Datum array_all(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
-    prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    if (pred_len == 0) {
+        PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+        // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
+        array_free_iterator(iterator);
+        PG_RETURN_NULL();
+    }
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
             //PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
@@ -582,6 +603,7 @@ Datum array_none(PG_FUNCTION_ARGS) {
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
+    int pred_len;
     Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
@@ -602,7 +624,13 @@ Datum array_none(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
-    prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    if (pred_len == 0) {
+        PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+        // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
+        array_free_iterator(iterator);
+        PG_RETURN_NULL();
+    }
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
 

@@ -69,6 +69,6 @@ bool datum_is_zero(Datum value, Oid type_oid, Oid collid);
 Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid);
 //bool process(Datum element, Datum predicate_text, Oid target_oid, Oid collid);
 Numeric datum_to_numeric(Datum element, Oid type_oid);
-void prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predicate, Oid collid);
+int32 prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predicate, Oid collid);
 bool execute_predicate(Predicate* predicate, Datum element, Oid target_oid, Oid collid);
 void free_predicate(Predicate* predicate);

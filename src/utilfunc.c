@@ -399,13 +399,18 @@ Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
     return result;
 }
 
-void prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predicate, Oid collid) {
+int32 prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predicate, Oid collid) {
     char *predicate_string = text_to_cstring(DatumGetTextP(predicate_text));
     int32 predicate_len = strlen(predicate_string);
     Token tokens[10];
+    int32 token_count;
     ParsedPredicate parsed;
 
-    int32 token_count = lexical_analyze(
+    if (predicate_len == 0) {
+        // это значит, что строка predicate = ""
+        return 0;
+    }
+    token_count = lexical_analyze(
         predicate_string,
         predicate_len,
         tokens,
@@ -421,6 +426,7 @@ void prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predicat
                      errmsg("execute_predicate: division by zero")));
 
     pfree(predicate_string);
+    return predicate_len;
 }
 bool execute_predicate(Predicate* predicate, Datum element, Oid target_oid, Oid collid) {
     bool res;
