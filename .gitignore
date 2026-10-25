@@ -60,8 +60,6 @@ old
 results/
 results
 
-expected/
-expected
 
 tmp.sql
 *.diffs
