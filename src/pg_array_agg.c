@@ -565,7 +565,8 @@ Datum array_all(PG_FUNCTION_ARGS) {
         PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
         // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
         array_free_iterator(iterator);
-        PG_RETURN_NULL();
+        if(ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0) PG_RETURN_BOOL(true);
+        PG_RETURN_BOOL(false);
     }
     while(array_iterate(iterator, &current_element, &is_null)) {
         if (is_null) {
@@ -624,6 +625,12 @@ Datum array_none(PG_FUNCTION_ARGS) {
     iterator = array_create_iterator(arr, 0, NULL);
 
     pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
+    if (pred_len == 0) {
+        PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
+        // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
+        array_free_iterator(iterator);
+        PG_RETURN_BOOL(true);
+    }
     if (pred_len == 0) {
         PG_FREE_IF_COPY(arr, 0); // если массив был разбит на тосты, избежим утечек так
         // так как внутри prepare_predicate в таком случае память не выделяется, compiled_predicate можно не очищать
