@@ -40,7 +40,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
     Numeric res;
     Numeric tmp_elem;
     Numeric tmp_res;
-    bool err = false;
+    //bool err = false;
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
     if (PG_NARGS() > 1) ereport(ERROR,
@@ -73,16 +73,16 @@ Datum array_product(PG_FUNCTION_ARGS) {
             PG_RETURN_NULL();
         }
         tmp_elem = datum_to_numeric(elem, arr->elemtype);
-        tmp_res = numeric_mul_opt_error(res, tmp_elem, &err);
+        tmp_res = numeric_mul_safe(res, tmp_elem, NULL);
         pfree(res);
         pfree(tmp_elem);
-        if(err) {
-            PG_FREE_IF_COPY(arr, 0);
-            array_free_iterator(arr_it);        
-            ereport(ERROR,
-            (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-             errmsg("array_product: An error occurred during a numeric multiplication.")));
-        }
+        //if(err) {
+        //    PG_FREE_IF_COPY(arr, 0);
+        //    array_free_iterator(arr_it);        
+        //    ereport(ERROR,
+        //    (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+        //     errmsg("array_product: An error occurred during a numeric multiplication.")));
+        //}
         res = tmp_res;
     }
 
@@ -101,7 +101,7 @@ Datum array_sum(PG_FUNCTION_ARGS) {
     Numeric res;
     Numeric tmp_elem;
     Numeric tmp_res;
-    bool err = false;
+    //bool err = false;
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
     if (PG_NARGS() > 1) ereport(ERROR,
@@ -136,16 +136,16 @@ Datum array_sum(PG_FUNCTION_ARGS) {
         }
 
         tmp_elem = datum_to_numeric(elem, arr->elemtype);
-        tmp_res = numeric_add_opt_error(res, tmp_elem, &err);
+        tmp_res = numeric_add_safe(res, tmp_elem, NULL);
         pfree(res);
         pfree(tmp_elem);
-        if(err) {
-            PG_FREE_IF_COPY(arr, 0);
-            array_free_iterator(arr_it);        
-            ereport(ERROR,
-            (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-             errmsg("array_sum: An error occurred during a numeric sum")));
-        }
+        //if(err) {
+        //    PG_FREE_IF_COPY(arr, 0);
+        //    array_free_iterator(arr_it);        
+        //    ereport(ERROR,
+        //    (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+        //     errmsg("array_sum: An error occurred during a numeric sum")));
+        //}
         res = tmp_res;
     }
     PG_FREE_IF_COPY(arr, 0);
@@ -166,7 +166,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     Numeric tmp_res;
     Numeric final_res;
     int64 count;
-    bool err = false;
+    //bool err = false;
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
     if (PG_NARGS() > 1) ereport(ERROR,
@@ -207,14 +207,14 @@ Datum array_avg(PG_FUNCTION_ARGS) {
         }
 
         tmp_elem = datum_to_numeric(elem, arr->elemtype);
-        tmp_res = numeric_add_opt_error(res, tmp_elem, &err);
+        tmp_res = numeric_add_safe(res, tmp_elem, NULL);
         pfree(res);
         pfree(tmp_elem);
-        if(err) {
-            ereport(ERROR,
-            (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-             errmsg("array_avg: An error occurred during a numeric sum.")));
-        }
+        //if(err) {
+        //    ereport(ERROR,
+        //    (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+        //     errmsg("array_avg: An error occurred during a numeric sum.")));
+        //}
         res = tmp_res;
         count++;
     }
@@ -222,14 +222,13 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
     total = int64_to_numeric(count);
-    final_res = numeric_div_opt_error(res, total, &err);
+    final_res = numeric_div_safe(res, total, NULL);
     pfree(res);
     pfree(total);
-    if (err)      
-        ereport(ERROR,
-        (errcode(ERRCODE_DIVISION_BY_ZERO),
-         errmsg("array_avg: Division by zero error")));
-
+    //if (err)      
+    //    ereport(ERROR,
+    //    (errcode(ERRCODE_DIVISION_BY_ZERO),
+    //     errmsg("array_avg: Division by zero error")));
     PG_RETURN_NUMERIC(final_res);
 }
 
