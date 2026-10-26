@@ -1,6 +1,6 @@
 EXTENSION = pg_array_agg
 
-TAP_TESTS = 1
+TAP_TESTS = t/001_transactions.pl t/002_parallel.pl t/003_error_query.pl
 
 DATA = pg_array_agg--1.0.sql
 

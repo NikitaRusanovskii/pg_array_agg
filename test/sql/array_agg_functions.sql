@@ -71,6 +71,7 @@ SELECT array_avg('{Infinity}'::real[]);
 SELECT array_avg('{-Infinity}'::real[]);
 SELECT array_avg('{Infinity, -Infinity}'::real[]);
 SELECT array_avg(ARRAY[[1, 2], [3, 4]]);
+SELECT array_avg(ARRAY(SELECT generate_series(1, 65000000))::Integer[]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_avg('{}'::integer[]);
