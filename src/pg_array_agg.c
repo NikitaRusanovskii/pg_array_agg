@@ -49,7 +49,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
 
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1) {
+    if (ARR_NDIM(arr) > 2) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_product: Invalid ndim of array: %d", ARR_NDIM(arr))));
@@ -110,7 +110,7 @@ Datum array_sum(PG_FUNCTION_ARGS) {
 
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1) {
+    if (ARR_NDIM(arr) > 2) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_sum: Invalid ndim of array: %d", ARR_NDIM(arr))));
@@ -175,7 +175,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
 
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1) {
+    if (ARR_NDIM(arr) > 2) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_avg: Invalid ndim of array: %d", ARR_NDIM(arr))));
@@ -249,7 +249,7 @@ Datum array_min(PG_FUNCTION_ARGS) {
 
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1) {
+    if (ARR_NDIM(arr) > 2) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_min: Invalid ndim of array: %d", ARR_NDIM(arr))));
@@ -306,7 +306,7 @@ Datum array_max(PG_FUNCTION_ARGS) {
 
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1) {
+    if (ARR_NDIM(arr) > 2) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_max: Invalid ndim of array: %d", ARR_NDIM(arr))));
@@ -364,7 +364,7 @@ Datum array_count(PG_FUNCTION_ARGS) {
     arr = PG_GETARG_ARRAYTYPE_P(0);
     element = PG_GETARG_DATUM(1);
 
-    if (ARR_NDIM(arr) > 1) {
+    if (ARR_NDIM(arr) > 2) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_count: Invalid ndim of array: %d", ARR_NDIM(arr))));
@@ -408,10 +408,10 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1)
+    if (ARR_NDIM(arr) > 2)
         ereport(ERROR,
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-             errmsg("array_count_if: searching elements in manydimensional arrays is not supported yet")));
+             errmsg("array_count_if: searching elements in manydimensional [when ndim > 2] arrays is not supported yet")));
 
     if (!type_is_expected(arr->elemtype, expected_types, 9))
         ereport(ERROR,
@@ -462,10 +462,10 @@ Datum array_any(PG_FUNCTION_ARGS) {
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1)
+    if (ARR_NDIM(arr) > 2)
         ereport(ERROR,
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-             errmsg("array_any: searching elements in manydimensional arrays is not supported yet")));
+             errmsg("array_any: searching elements in manydimensional [when ndim > 2] arrays is not supported yet")));
 
     if (!type_is_expected(arr->elemtype, expected_types, 9))
         ereport(ERROR,
@@ -519,10 +519,10 @@ Datum array_all(PG_FUNCTION_ARGS) {
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1)
+    if (ARR_NDIM(arr) > 2)
         ereport(ERROR,
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-             errmsg("array_all: searching elements in manydimensional arrays is not supported yet")));
+             errmsg("array_all: searching elements in manydimensional [when ndim > 2] arrays is not supported yet")));
 
     if (!type_is_expected(arr->elemtype, expected_types, 9))
         ereport(ERROR,
@@ -578,10 +578,10 @@ Datum array_none(PG_FUNCTION_ARGS) {
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL(); // функция STRIСT, этого никогда не произойдёт
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
-    if (ARR_NDIM(arr) > 1)
+    if (ARR_NDIM(arr) > 2)
         ereport(ERROR,
             (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-             errmsg("array_none: searching elements in manydimensional arrays is not supported yet")));
+             errmsg("array_none: searching elements in manydimensional [when ndim > 2] arrays is not supported yet")));
 
     if (!type_is_expected(arr->elemtype, expected_types, 9))
         ereport(ERROR,

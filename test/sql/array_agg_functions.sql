@@ -19,13 +19,14 @@ SELECT array_product('{-Infinity, 2}'::real[]);
 SELECT array_product('{Infinity, 0}'::real[]);
 SELECT array_product('{Infinity, -Infinity}'::real[]);
 SELECT array_product('{NaN, 0}'::real[]);
+SELECT array_product(ARRAY[[1, 2], [3, 4]]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_product(NULL::integer[]);
 SELECT array_product('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_product(ARRAY[[1, 2], [3, 4]]);
+SELECT array_product(ARRAY[[[1, 2]], [[3, 4]]]);
 SELECT array_product(ARRAY['a', 'b']::text[]);
 
 --- ======================================================================================
@@ -45,13 +46,14 @@ SELECT array_sum('{-Infinity}'::real[]);
 SELECT array_sum('{Infinity, 2}'::real[]);
 SELECT array_sum('{-Infinity, 2}'::real[]);
 SELECT array_sum('{Infinity, -Infinity}'::real[]);
+SELECT array_sum(ARRAY[[1, 2], [3, 4]]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_sum(NULL::integer[]);
 SELECT array_sum('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_sum(ARRAY[[1, 2], [3, 4]]);
+SELECT array_sum(ARRAY[[[1, 2]], [[3, 4]]]);
 SELECT array_sum(ARRAY['a', 'b']::text[]);
 
 --- ======================================================================================
@@ -68,6 +70,7 @@ SELECT array_avg('{NaN}'::real[]);
 SELECT array_avg('{Infinity}'::real[]);
 SELECT array_avg('{-Infinity}'::real[]);
 SELECT array_avg('{Infinity, -Infinity}'::real[]);
+SELECT array_avg(ARRAY[[1, 2], [3, 4]]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_avg('{}'::integer[]);
@@ -75,7 +78,7 @@ SELECT array_avg(NULL::integer[]);
 SELECT array_avg('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_avg(ARRAY[[1, 2], [3, 4]]);
+SELECT array_avg(ARRAY[[[1, 2]], [[3, 4]]]);
 SELECT array_avg(ARRAY['a', 'b']::text[]);
 
 --- ======================================================================================
@@ -89,6 +92,7 @@ SELECT array_min('{2.3, 2.4, 2.3}'::numeric[]);
 SELECT array_min('{-Infinity, NaN}'::real[]);
 SELECT array_min('{Infinity, -Infinity}'::real[]);
 SELECT array_min('{NaN, Infinity}'::real[]);
+SELECT array_min(ARRAY[[1, 2], [3, 4]]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_min('{}'::integer[]);
@@ -96,7 +100,7 @@ SELECT array_min(NULL::integer[]);
 SELECT array_min('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_min(ARRAY[[1, 2], [3, 4]]);
+SELECT array_min(ARRAY[[[1, 2]], [[3, 4]]]);
 SELECT array_min(ARRAY[true, false]::boolean[]);
 
 --- ======================================================================================
@@ -110,6 +114,7 @@ SELECT array_max('{2.3, 2.4, 2.3}'::numeric[]);
 SELECT array_max('{NaN, Infinity}'::real[]);
 SELECT array_max('{Infinity, -Infinity}'::real[]);
 SELECT array_max('{-Infinity, 2}'::real[]);
+SELECT array_max(ARRAY[[1, 2], [3, 4]]);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_max('{}'::integer[]);
@@ -117,6 +122,7 @@ SELECT array_max(NULL::integer[]);
 SELECT array_max('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
+SELECT array_max(ARRAY[[[1, 2]], [[3, 4]]]);
 SELECT array_max(ARRAY[[1, 2], [3, 4]]);
 SELECT array_max(ARRAY[true, false]::boolean[]);
 
@@ -144,13 +150,14 @@ SELECT array_count(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'h
 SELECT array_count(ARRAY['cat', 'dog', 'cat']::char(5)[], 'cat'::char(5));
 SELECT array_count(ARRAY['cat', 'dog', 'cat']::character(5)[], 'cat'::character(5));
 SELECT array_count(ARRAY['cat'::char(5), 'cat  '::char(5), 'dog'::char(5)], 'cat'::char(5));
+SELECT array_count(ARRAY[[1, 2], [3, 4]], 1);
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_count(NULL::integer[], 1);
 SELECT array_count(ARRAY[1, 2, 3], NULL);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_count(ARRAY[[1, 2], [3, 4]], 1);
+SELECT array_count(ARRAY[[[1, 2]], [[3, 4]]], 1);
 SELECT array_count(ARRAY[1, 2, 3], '1'::text);
 SELECT array_count(ARRAY['a', 'b'], 1);
 
@@ -176,13 +183,14 @@ SELECT array_count_if(ARRAY['hello', 'world', 'hello']::character varying(10)[],
 SELECT array_count_if(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
 SELECT array_count_if(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
 SELECT array_count_if(ARRAY['cat'::char(5), 'cat  '::char(5), 'dog'::char(5)], 'x == "cat"');
+SELECT array_count_if(ARRAY[[1, 2], [3, 4]], 'x == 1');
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_count_if(NULL::integer[], 'x == 1');
 SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_count_if(ARRAY[[1, 2], [3, 4]], 'x == 1');
+SELECT array_count_if(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > ''a''');
 SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 1');
 SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
@@ -209,13 +217,14 @@ SELECT array_all(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
 SELECT array_all(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
 SELECT array_all(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
 SELECT array_all(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+SELECT array_all(ARRAY[[1, 2], [3, 4]], 'x == 1');
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_all(NULL::integer[], 'x == 1');
 SELECT array_all(ARRAY[1, 2, 3], NULL::text);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_all(ARRAY[[1, 2], [3, 4]], 'x == 1');
+SELECT array_all(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 SELECT array_all(ARRAY['a', 'b']::text[], 'x > ''a''');
 SELECT array_all(ARRAY[1, 2, 3], 'x @@@ 1');
 SELECT array_all(ARRAY[1, 2, 3], 'x ==');
@@ -242,13 +251,14 @@ SELECT array_any(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
 SELECT array_any(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
 SELECT array_any(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
 SELECT array_any(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+SELECT array_any(ARRAY[[1, 2], [3, 4]], 'x == 1');
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_any(NULL::integer[], 'x == 1');
 SELECT array_any(ARRAY[1, 2, 3], NULL::text);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_any(ARRAY[[1, 2], [3, 4]], 'x == 1');
+SELECT array_any(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 SELECT array_any(ARRAY['a', 'b']::text[], 'x > ''a''');
 SELECT array_any(ARRAY[1, 2, 3], 'x @@@ 1');
 SELECT array_any(ARRAY[1, 2, 3], 'x ==');
@@ -275,13 +285,14 @@ SELECT array_none(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
 SELECT array_none(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
 SELECT array_none(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
 SELECT array_none(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+SELECT array_none(ARRAY[[1, 2], [3, 4]], 'x == 1');
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_none(NULL::integer[], 'x == 1');
 SELECT array_none(ARRAY[1, 2, 3], NULL::text);
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_none(ARRAY[[1, 2], [3, 4]], 'x == 1');
+SELECT array_none(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 SELECT array_none(ARRAY['a', 'b']::text[], 'x > ''a''');
 SELECT array_none(ARRAY[1, 2, 3], 'x @@@ 1');
 SELECT array_none(ARRAY[1, 2, 3], 'x ==');
