@@ -66,6 +66,7 @@ jobs:
             --language=c \
             --std=c11 \
             --template=gcc \
-            --file-filter='*.c | *.h' \
+            --file-filter='*.c' \
+            --file-filter='*.h' \
             --check-level=exhaustive \
             src/
