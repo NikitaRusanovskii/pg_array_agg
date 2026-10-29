@@ -51,5 +51,5 @@ jobs:
           sudo apt-get install clang-19
       - run: PG_CONFIG=/usr/local/pgsql/bin/pg_config make OPTFLAGS="" USE_PGXS=1
       - run: |
-          sudo PG_CONFIG=/usr/local/pgsql/bin/pg_config make install USE_PGXS=1
-      - run: PG_CONFIG=/usr/local/pgsql/bin/pg_config make installcheck USE_PGXS=1
+          sudo make PG_CONFIG=/usr/local/pgsql/bin/pg_config install USE_PGXS=1
+      - run: make PG_CONFIG=/usr/local/pgsql/bin/pg_config installcheck USE_PGXS=1
