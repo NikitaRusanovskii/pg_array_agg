@@ -61,7 +61,6 @@ jobs:
             --inline-suppr \
             --error-exitcode=1 \
             --suppress=missingInclude \
-            --suppress=staticFunction:src/pg_array_agg.c \
             --language=c \
             --std=c11 \
             --template=gcc \
