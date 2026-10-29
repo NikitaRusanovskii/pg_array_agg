@@ -1,5 +1,6 @@
 #include "postgres.h"
 #include "fmgr.h"
+#include "pg_config.h"
 #include "utils/array.h"
 #include "utils/elog.h"
 #include "utils/numeric.h"
@@ -40,7 +41,9 @@ Datum array_product(PG_FUNCTION_ARGS) {
     Numeric res;
     Numeric tmp_elem;
     Numeric tmp_res;
-    
+    #if PG_VERSION_NUM < 190000
+    bool err;
+    #endif
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
     if (PG_NARGS() > 1) ereport(ERROR,
@@ -73,11 +76,23 @@ Datum array_product(PG_FUNCTION_ARGS) {
             PG_RETURN_NULL();
         }
         tmp_elem = datum_to_numeric(elem, arr->elemtype);
+        #if PG_VERSION_NUM >= 190000
         tmp_res = numeric_mul_safe(res, tmp_elem, NULL);
+        #else
+        tmp_res = numeric_mul_opt_error(res, tmp_elem, &err);
+        if(err) {
+            pfree(res);
+            pfree(tmp_elem);
+            PG_FREE_IF_COPY(arr, 0);
+            array_free_iterator(arr_it);        
+            ereport(ERROR,
+            (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+             errmsg("array_product: An error occurred during a numeric multiplication.")));
+            }
+        #endif
         pfree(res);
         pfree(tmp_elem);
         res = tmp_res;
-    }
 
     PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
@@ -94,6 +109,9 @@ Datum array_sum(PG_FUNCTION_ARGS) {
     Numeric res;
     Numeric tmp_elem;
     Numeric tmp_res;
+    #if PG_VERSION_NUM < 190000
+    bool err;
+    #endif
     
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
@@ -129,7 +147,20 @@ Datum array_sum(PG_FUNCTION_ARGS) {
         }
 
         tmp_elem = datum_to_numeric(elem, arr->elemtype);
+        #if PG_VERSION_NUM >= 190000
         tmp_res = numeric_add_safe(res, tmp_elem, NULL);
+        #else
+        tmp_res = numeric_add_opt_error(res, tmp_elem, &err);
+        if(err) {
+            pfree(res);
+            pfree(tmp_elem);
+            PG_FREE_IF_COPY(arr, 0);
+            array_free_iterator(arr_it);        
+            ereport(ERROR,
+            (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+             errmsg("array_product: An error occurred during a numeric sum.")));
+            }
+        #endif
         pfree(res);
         pfree(tmp_elem);
         res = tmp_res;
@@ -152,6 +183,9 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     Numeric tmp_res;
     Numeric final_res;
     int64 count;
+    #if PG_VERSION_NUM < 190000
+    bool err;
+    #endif
     
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
@@ -193,7 +227,20 @@ Datum array_avg(PG_FUNCTION_ARGS) {
         }
 
         tmp_elem = datum_to_numeric(elem, arr->elemtype);
+        #if PG_VERSION_NUM >= 190000
         tmp_res = numeric_add_safe(res, tmp_elem, NULL);
+        #else
+        tmp_res = numeric_add_opt_error(res, tmp_elem, &err);
+        if(err) {
+            pfree(res);
+            pfree(tmp_elem);
+            PG_FREE_IF_COPY(arr, 0);
+            array_free_iterator(arr_it);        
+            ereport(ERROR,
+            (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+             errmsg("array_product: An error occurred during a numeric sum.")));
+            }
+        #endif
         pfree(res);
         pfree(tmp_elem);
         res = tmp_res;
@@ -203,7 +250,20 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
     total = int64_to_numeric(count);
-    final_res = numeric_div_safe(res, total, NULL);
+    #if PG_VERSION_NUM >= 190000
+    final_res = numeric_div_safe(res, tmp_elem, NULL);
+    #else
+    final_res = numeric_div_opt_error(res, tmp_elem, &err);
+    if(err) {
+        pfree(res);
+        pfree(tmp_elem);
+        PG_FREE_IF_COPY(arr, 0);
+        array_free_iterator(arr_it);        
+        ereport(ERROR,
+        (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+         errmsg("array_product: An error occurred during a numeric div.")));
+        }
+    #endif
     pfree(res);
     pfree(total);
     PG_RETURN_NUMERIC(final_res);
