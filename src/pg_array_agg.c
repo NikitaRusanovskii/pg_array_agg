@@ -562,12 +562,13 @@ Datum array_all(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     int pred_len;
-    int arr_len = ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr));
+    int arr_len;
     Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
     arr = PG_GETARG_ARRAYTYPE_P(0);
+    arr_len = ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr));
 
     if (ARR_NDIM(arr) > 2)
         ereport(ERROR,
