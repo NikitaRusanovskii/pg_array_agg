@@ -93,6 +93,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
         pfree(res);
         pfree(tmp_elem);
         res = tmp_res;
+    }
 
     PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
