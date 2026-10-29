@@ -661,14 +661,12 @@ SELECT array_count(ARRAY[1, 2, 3], '1'::text);
 ERROR:  function array_count(integer[], text) does not exist
 LINE 1: SELECT array_count(ARRAY[1, 2, 3], '1'::text);
                ^
-DETAIL:  No function of that name accepts the given argument types.
-HINT:  You might need to add explicit type casts.
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 SELECT array_count(ARRAY['a', 'b'], 1);
 ERROR:  function array_count(text[], integer) does not exist
 LINE 1: SELECT array_count(ARRAY['a', 'b'], 1);
                ^
-DETAIL:  No function of that name accepts the given argument types.
-HINT:  You might need to add explicit type casts.
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 --- ======================================================================================
 --- ======================================================================================
 -- ТЕСТЫ array_count_if:
