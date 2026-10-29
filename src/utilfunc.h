@@ -59,7 +59,7 @@ typedef struct {
 } Token;
 
 bool type_is_expected(Oid type_oid, const Oid* expected_types, uint32 len);
-Datum string_to_datum(char* str, int len, Oid target_oid);
+Datum string_to_datum(const char* str, int len, Oid target_oid);
 Token construct_token(TokenType type, const char* token, int32 lenght);
 int32 lexical_analyze(const char* predicate_string, int32 len, Token* result, int32 token_len);
 int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predicate);
