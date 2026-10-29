@@ -65,3 +65,8 @@ tmp.sql
 .vscode/
 
 tmp_check/
+
+*.py
+env/
+.deps/
+.vscode/

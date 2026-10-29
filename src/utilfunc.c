@@ -10,7 +10,7 @@
 
 
 bool type_is_expected(Oid type_oid, const Oid* expected_types, uint32 len) {
-    for (int i = 0; i < len; i++) {
+    for (uint32 i = 0; i < len; i++) {
         if (expected_types[i] == type_oid) return true;
     }
     return false;
@@ -48,7 +48,7 @@ Numeric datum_to_numeric(Datum element, Oid type_oid) {
     return tmp;
 }
 
-Datum string_to_datum(char* str, int len, Oid target_oid) {
+Datum string_to_datum(const char* str, int len, Oid target_oid) {
     Oid input;
     Oid param;
     Datum res;
@@ -63,7 +63,7 @@ Token construct_token(TokenType type, const char* token, int32 lenght) {
     return (Token){type, token, lenght};
 }
 
-int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 token_len) {
+int32 lexical_analyze(const char* predicate_string, int32 len, Token* result, int32 token_len) {
     int32 token_position = 0;
     int32 name_start = 0;
 
@@ -91,19 +91,19 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
         else if (predicate_string[i] ==  '%') {
             result[token_position++] = construct_token(T_MOD, &predicate_string[i], 1);
         }
-        else if (predicate_string[i] ==  '=' && i < (len - 1) && predicate_string[i+1] == '=') {
+        else if (i < (len - 1) && predicate_string[i] ==  '=' && predicate_string[i+1] == '=') {
             result[token_position++] = construct_token(T_EQ, &predicate_string[i], 2);
             i++;
         }
-        else if (predicate_string[i] ==  '!' && i < (len - 1) && predicate_string[i+1] == '=') {
+        else if (i < (len - 1) && predicate_string[i] ==  '!' && predicate_string[i+1] == '=') {
             result[token_position++] = construct_token(T_NEQ, &predicate_string[i], 2);
             i++;
         }
-        else if (predicate_string[i] ==  '<' && i < (len - 1) && predicate_string[i+1] == '=') {
+        else if (i < (len - 1) && predicate_string[i] ==  '<' && predicate_string[i+1] == '=') {
             result[token_position++] = construct_token(T_LEE, &predicate_string[i], 2);
             i++;
         }
-        else if (predicate_string[i] ==  '>' && i < (len - 1) && predicate_string[i+1] == '=') {
+        else if (i < (len - 1) && predicate_string[i] ==  '>' && predicate_string[i+1] == '=') {
             result[token_position++] = construct_token(T_GRE, &predicate_string[i], 2);
             i++;
         }
@@ -184,13 +184,13 @@ int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 to
 int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predicate) {
     // %: x op const = const 5 токенов + конечный = 6 токенов
     // др: x op const
-    int32 modlen = 6;
-    int32 cmplen = 4;
-    int32 varpos = 0;
-    int32 op1pos = 1;
-    int32 const1pos = 2;
-    int32 op2pos = 3;
-    int32 const2pos = 4;
+    const int32 modlen = 6;
+    const int32 cmplen = 4;
+    const int32 varpos = 0;
+    const int32 op1pos = 1;
+    const int32 const1pos = 2;
+    const int32 op2pos = 3;
+    const int32 const2pos = 4;
 
     memset(predicate, 0, sizeof(*predicate));
     if (len <= 0)
@@ -411,6 +411,11 @@ Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
             result = Int64GetDatum(DatumGetInt64(first) % DatumGetInt64(second));
             break;
         }
+        default:
+            ereport(ERROR,
+                (errcode(ERRCODE_WRONG_OBJECT_TYPE),
+                errmsg("mod_op: wrong oid: %d", target_oid)));
+            break;
     }
     return result;
 }
@@ -448,9 +453,8 @@ int32 prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predica
     pfree(predicate_string);
     return predicate_len;
 }
-bool execute_predicate(Predicate* predicate, Datum element, Oid target_oid, Oid collid) {
+bool execute_predicate(const Predicate* predicate, Datum element, Oid target_oid, Oid collid) {
     bool res;
-    Datum tmp;
     switch(predicate->op) {
         case OP_EQ: {
             res = (cmp_op(target_oid, element, predicate->const1, collid) == 0);
@@ -477,9 +481,10 @@ bool execute_predicate(Predicate* predicate, Datum element, Oid target_oid, Oid 
             break;
         }
         case OP_MOD: {
-            tmp = mod_op(target_oid, element, predicate->const1, collid);
-            res = (cmp_op(target_oid, tmp, predicate->const2, collid) == 0);
-            if (target_oid == NUMERICOID) pfree(DatumGetPointer(tmp));
+            res = (cmp_op(target_oid,
+                    mod_op(target_oid, element, predicate->const1, collid),
+                    predicate->const2,
+                    collid) == 0);
             break;
         }
         default: {
@@ -491,7 +496,7 @@ bool execute_predicate(Predicate* predicate, Datum element, Oid target_oid, Oid 
     }
     return res;
 }
-void free_predicate(Predicate* predicate) {
+void free_predicate(const Predicate* predicate) {
     int16 typlen;
     bool typbyval;
 
