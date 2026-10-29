@@ -52,4 +52,18 @@ jobs:
       - run: PG_CONFIG=/usr/local/pgsql/bin/pg_config make OPTFLAGS="" USE_PGXS=1
       - run: |
           sudo make PG_CONFIG=/usr/local/pgsql/bin/pg_config install USE_PGXS=1
-      - run: make PG_CONFIG=/usr/local/pgsql/bin/pg_config installcheck USE_PGXS=1
+      - run: |
+          timeout-minutes: 5
+          make PG_CONFIG=/usr/local/pgsql/bin/pg_config installcheck USE_PGXS=1
+      - name: Upload Valgrind diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: valgrind-diagnostics
+          path: |
+            /home/runner/work/pg_array_agg/pg_array_agg/valgrind*.log
+            /home/runner/work/pg_array_agg/pg_array_agg/test/regression.diffs
+            /home/runner/work/pg_array_agg/pg_array_agg/test/regression.out
+            /tmp/valgrind*.log
+          if-no-files-found: warn
+          retention-days: 7
