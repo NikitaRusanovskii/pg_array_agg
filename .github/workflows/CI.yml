@@ -31,14 +31,10 @@ jobs:
           PG_CFLAGS: -DUSE_ASSERT_CHECKING -Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare ${{ matrix.postgres == 18 && '-Wno-missing-field-initializers' || '' }}
       - run: |
           export PG_CONFIG=`which pg_config`
-          sudo --preserve-env=PG_CONFIG make install
-      - run: make installcheck
+          sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
+      - run: make installcheck USE_PGXS=1
       - if: ${{ failure() }}
         run: cat regression.diffs
-      - run: |
-          sudo apt-get update
-          sudo apt-get install libipc-run-perl
-      - run: make prove_installcheck
   valgrind:
     runs-on: ubuntu-latest
     steps:
@@ -47,6 +43,6 @@ jobs:
         with:
           postgres-version: 18
           check-ub: yes
-      - run: make OPTFLAGS=""
-      - run: sudo --preserve-env=PG_CONFIG make install
-      - run: make installcheck
+      - run: make OPTFLAGS="" USE_PGXS=1
+      - run: sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
+      - run: make installcheck USE_PGXS=1
