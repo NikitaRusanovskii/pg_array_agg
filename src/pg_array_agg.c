@@ -34,7 +34,7 @@ PG_FUNCTION_INFO_V1(array_none);
 
 Datum array_product(PG_FUNCTION_ARGS) {
     ArrayType *arr;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID}; // они должны совпадать с функцией валидатором. Это небезопасно с точки зрения рефакторинга. Надо уединить их в одном месте
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID}; // они должны совпадать с функцией валидатором. Это небезопасно с точки зрения рефакторинга. Надо уединить их в одном месте
     ArrayIterator arr_it;
     Datum elem;
     bool is_null = false;
@@ -103,7 +103,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
 
 Datum array_sum(PG_FUNCTION_ARGS) {
     ArrayType *arr;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
     ArrayIterator arr_it;
     Datum elem;
     bool is_null = false;
@@ -174,7 +174,7 @@ Datum array_sum(PG_FUNCTION_ARGS) {
 
 Datum array_avg(PG_FUNCTION_ARGS) {
     ArrayType *arr;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
     ArrayIterator arr_it;
     Datum elem;
     bool is_null = false;
@@ -272,7 +272,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
 
 Datum array_min(PG_FUNCTION_ARGS) {
     ArrayType *arr;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
     ArrayIterator arr_it;
     Datum elem;
     Datum res;
@@ -333,7 +333,7 @@ Datum array_min(PG_FUNCTION_ARGS) {
 
 Datum array_max(PG_FUNCTION_ARGS) {
     ArrayType *arr;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
     ArrayIterator arr_it;
     Datum elem;
     Datum res;
@@ -393,7 +393,7 @@ Datum array_max(PG_FUNCTION_ARGS) {
 Datum array_count(PG_FUNCTION_ARGS) {
     ArrayType *arr;
     Datum element;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
     ArrayIterator arr_it;
     Datum elem;
@@ -446,7 +446,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     bool is_null;
     int32 result;
     int pred_len;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
@@ -500,7 +500,7 @@ Datum array_any(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     int pred_len;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
@@ -557,7 +557,7 @@ Datum array_all(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     int pred_len;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
@@ -616,7 +616,7 @@ Datum array_none(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     int pred_len;
-    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
+    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL(); // функция STRIСT, этого никогда не произойдёт

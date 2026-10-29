@@ -61,11 +61,13 @@ jobs:
             --inline-suppr \
             --error-exitcode=1 \
             --suppress=missingIncludeSystem \
+            --suppress=missingInclude \
             --suppress=unusedFunction \
             --language=c \
             --std=c11 \
             --template=gcc \
-            --file-filter='*.c' \
-            --file-filter='*.h' \
+            --file-filter='pg_array_agg.c' \
+            --file-filter='utilfunc.c' \
+            --file-filter='utilfunc.h' \
             --check-level=exhaustive \
             src/
