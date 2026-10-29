@@ -48,7 +48,7 @@ Numeric datum_to_numeric(Datum element, Oid type_oid) {
     return tmp;
 }
 
-Datum string_to_datum(const char* str, int len, Oid target_oid) {
+static Datum string_to_datum(const char* str, int len, Oid target_oid) {
     Oid input;
     Oid param;
     Datum res;
@@ -59,11 +59,11 @@ Datum string_to_datum(const char* str, int len, Oid target_oid) {
     return res;
 }
 
-Token construct_token(TokenType type, const char* token, int32 lenght) {
+static Token construct_token(TokenType type, const char* token, int32 lenght) {
     return (Token){type, token, lenght};
 }
 
-int32 lexical_analyze(const char* predicate_string, int32 len, Token* result, int32 token_len) {
+static int32 lexical_analyze(const char* predicate_string, int32 len, Token* result, int32 token_len) {
     int32 token_position = 0;
     int32 name_start = 0;
 
@@ -179,7 +179,7 @@ int32 lexical_analyze(const char* predicate_string, int32 len, Token* result, in
     return token_position;
 }
 
-int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predicate) {
+static int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predicate) {
     // %: x op const = const 5 токенов + конечный = 6 токенов
     // др: x op const
     const int32 modlen = 6;
@@ -269,7 +269,7 @@ int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predi
 }
 
 
-void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) {
+static void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) {
     if (parsed == NULL)
         ereport(ERROR,
             (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
@@ -337,7 +337,7 @@ int32 cmp_op(Oid target_oid, Datum first, Datum second, Oid collid) {
 
 }
 
-bool datum_is_zero(Datum value, Oid type_oid, Oid collid) {
+static bool datum_is_zero(Datum value, Oid type_oid, Oid collid) {
     Datum zero;
     bool res;
     switch (type_oid) {
@@ -372,7 +372,7 @@ bool datum_is_zero(Datum value, Oid type_oid, Oid collid) {
 }
 
 
-Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
+static Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
     Datum result;
 
     if (datum_is_zero(second, target_oid, collid))

@@ -161,7 +161,7 @@ Datum array_sum(PG_FUNCTION_ARGS) {
             array_free_iterator(arr_it);        
             ereport(ERROR,
             (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-             errmsg("array_product: An error occurred during a numeric sum.")));
+             errmsg("array_sum: An error occurred during a numeric sum.")));
             }
         #endif
         pfree(res);
@@ -242,7 +242,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
             array_free_iterator(arr_it);        
             ereport(ERROR,
             (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-             errmsg("array_product: An error occurred during a numeric sum.")));
+             errmsg("array_avg: An error occurred during a numeric sum.")));
             }
         #endif
         pfree(res);
@@ -263,7 +263,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
         array_free_iterator(arr_it);        
         ereport(ERROR,
         (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-         errmsg("array_product: An error occurred during a numeric div.")));
+         errmsg("array_avg: An error occurred during a numeric div.")));
         }
     #endif
     PG_FREE_IF_COPY(arr, 0);
@@ -562,9 +562,9 @@ Datum array_all(PG_FUNCTION_ARGS) {
     ArrayIterator iterator;
     bool is_null;
     int pred_len;
+    int arr_len = ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr));
     Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
-    int elcount;
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
     arr = PG_GETARG_ARRAYTYPE_P(0);
@@ -585,11 +585,10 @@ Datum array_all(PG_FUNCTION_ARGS) {
 
     pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     if (pred_len == 0) {
-        elcount = ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr));
         PG_FREE_IF_COPY(arr, 0);
         PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
         array_free_iterator(iterator);
-        if(elcount == 0) PG_RETURN_BOOL(true);
+        if(arr_len == 0) PG_RETURN_BOOL(true);
         PG_RETURN_BOOL(false);
     }
     while(array_iterate(iterator, &current_element, &is_null)) {
