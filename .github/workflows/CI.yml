@@ -46,6 +46,9 @@ jobs:
         with:
           postgres-version: 18
           check-ub: yes
+      - run : |
+          sudo apt-get update
+          sudo apt-get install clang-19
       - run: make OPTFLAGS="" USE_PGXS=1
       - run: sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
       - run: make installcheck USE_PGXS=1
