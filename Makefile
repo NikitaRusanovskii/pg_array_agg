@@ -16,6 +16,7 @@ PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 else
+PG_CFLAGS = -Wall -Werror -Wextra
 subdir = contrib/pg_array_agg
 top_builddir = ../..
 include $(top_builddir)/src/Makefile.global

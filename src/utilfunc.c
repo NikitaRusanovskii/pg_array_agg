@@ -84,8 +84,6 @@ int32 lexical_analyze(const char* predicate_string, int32 len, Token* result, in
             while (isalpha((unsigned char)predicate_string[i]) ||
             (unsigned char) predicate_string[i] == '_' ||
             (i > name_start && isalnum((unsigned char)predicate_string[i]))) i++;
-            
-            i--;
             result[token_position++] = construct_token(T_VARIABLE, &predicate_string[name_start], i - name_start);
         }
         else if (predicate_string[i] ==  '%') {
@@ -429,6 +427,7 @@ int32 prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predica
 
     if (predicate_len == 0) {
         // это значит, что строка predicate = ""
+        pfree(predicate_string);
         return 0;
     }
     token_count = lexical_analyze(

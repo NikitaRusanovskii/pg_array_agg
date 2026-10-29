@@ -73,6 +73,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
         if (is_null) {
             PG_FREE_IF_COPY(arr, 0);
             array_free_iterator(arr_it);
+            pfree(res);
             PG_RETURN_NULL();
         }
         tmp_elem = datum_to_numeric(elem, arr->elemtype);
@@ -144,6 +145,7 @@ Datum array_sum(PG_FUNCTION_ARGS) {
         if (is_null) {
             PG_FREE_IF_COPY(arr, 0);
             array_free_iterator(arr_it);
+            pfree(res);
             PG_RETURN_NULL();
         }
 
@@ -224,6 +226,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
         if (is_null) {
             PG_FREE_IF_COPY(arr, 0);
             array_free_iterator(arr_it);
+            pfree(res);
             PG_RETURN_NULL();
         }
 
@@ -248,8 +251,6 @@ Datum array_avg(PG_FUNCTION_ARGS) {
         count++;
     }
 
-    PG_FREE_IF_COPY(arr, 0);
-    array_free_iterator(arr_it);
     total = int64_to_numeric(count);
     #if PG_VERSION_NUM >= 190000
     final_res = numeric_div_safe(res, total, NULL);
@@ -265,6 +266,8 @@ Datum array_avg(PG_FUNCTION_ARGS) {
          errmsg("array_product: An error occurred during a numeric div.")));
         }
     #endif
+    PG_FREE_IF_COPY(arr, 0);
+    array_free_iterator(arr_it);
     pfree(res);
     pfree(total);
     PG_RETURN_NUMERIC(final_res);
@@ -470,6 +473,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     if (pred_len == 0) {
         PG_FREE_IF_COPY(arr, 0);
+        PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
         array_free_iterator(iterator);
         PG_RETURN_INT32(0);
     }
@@ -522,7 +526,8 @@ Datum array_any(PG_FUNCTION_ARGS) {
 
     pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     if (pred_len == 0) {
-        PG_FREE_IF_COPY(arr, 0); 
+        PG_FREE_IF_COPY(arr, 0);
+        PG_FREE_IF_COPY(DatumGetPointer(predicate), 1); 
         array_free_iterator(iterator);
         PG_RETURN_BOOL(false);
     }
@@ -559,6 +564,7 @@ Datum array_all(PG_FUNCTION_ARGS) {
     int pred_len;
     Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID,
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID};
+    int elcount;
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
     arr = PG_GETARG_ARRAYTYPE_P(0);
@@ -579,10 +585,11 @@ Datum array_all(PG_FUNCTION_ARGS) {
 
     pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     if (pred_len == 0) {
+        elcount = ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr));
         PG_FREE_IF_COPY(arr, 0);
-        
+        PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
         array_free_iterator(iterator);
-        if(ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0) PG_RETURN_BOOL(true);
+        if(elcount == 0) PG_RETURN_BOOL(true);
         PG_RETURN_BOOL(false);
     }
     while(array_iterate(iterator, &current_element, &is_null)) {
@@ -639,7 +646,7 @@ Datum array_none(PG_FUNCTION_ARGS) {
     pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
     if (pred_len == 0) {
         PG_FREE_IF_COPY(arr, 0);
-        
+        PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
         array_free_iterator(iterator);
         PG_RETURN_BOOL(true);
     }
