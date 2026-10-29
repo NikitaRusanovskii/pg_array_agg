@@ -32,6 +32,9 @@ jobs:
       - run: |
           export PG_CONFIG=`which pg_config`
           sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
+      - run: |
+          sudo apt-get update
+          sudo apt-get install libipc-run-perl
       - run: make installcheck USE_PGXS=1
       - if: ${{ failure() }}
         run: cat regression.diffs
