@@ -103,7 +103,7 @@ Datum array_product(PG_FUNCTION_ARGS) {
 
 Datum array_sum(PG_FUNCTION_ARGS) {
     ArrayType *arr;
-    Oid const expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+    Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
     ArrayIterator arr_it;
     Datum elem;
     bool is_null = false;
