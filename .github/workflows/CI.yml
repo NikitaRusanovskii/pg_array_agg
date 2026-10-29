@@ -101,4 +101,4 @@ jobs:
         run: |
           make installcheck USE_PGXS=1
       - if: ${{ failure() }}
-        run: cat regression.diffs
+        run: cat /home/runner/work/pg_array_agg/pg_array_agg/test/regression.diffs
