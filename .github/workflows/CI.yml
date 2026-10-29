@@ -85,10 +85,7 @@ jobs:
       - name: make postgres extension
         run: make USE_PGXS=1
         env:
-          PG_CFLAGS: -DUSE_ASSERT_CHECKING -fsanitize=address,undefined \
-                      -fno-sanitize-recover=all -fno-omit-frame-pointer \ 
-                      -Wall -Wextra -Werror -Wno-unused-parameter \
-                      -Wno-sign-compare -Wno-missing-field-initializers
+          PG_CFLAGS: -DUSE_ASSERT_CHECKING -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-missing-field-initializers
       - name: install postgres extension
         run: |
           export PG_CONFIG=`which pg_config`
