@@ -106,12 +106,12 @@ Datum array_sum(PG_FUNCTION_ARGS) {
     Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
     ArrayIterator arr_it;
     Datum elem;
-    bool is_null;
+    bool is_null = false;
     Numeric res;
     Numeric tmp_elem;
     Numeric tmp_res;
     #if PG_VERSION_NUM < 190000
-    bool err;
+    bool err = false;
     #endif
     
 
@@ -177,7 +177,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
     ArrayIterator arr_it;
     Datum elem;
-    bool is_null;
+    bool is_null = false;
     Numeric res;
     Numeric total;
     Numeric tmp_elem;
@@ -185,7 +185,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     Numeric final_res;
     int64 count;
     #if PG_VERSION_NUM < 190000
-    bool err;
+    bool err = false;
     #endif
     
 
