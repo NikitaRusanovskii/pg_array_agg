@@ -38,3 +38,34 @@ jobs:
       - run: make installcheck USE_PGXS=1
       - if: ${{ failure() }}
         run: cat regression.diffs
+  cppcheck:
+    name: Cppcheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v7
+
+      - name: install cppcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install cppcheck
+        
+      - name: checking
+        run: |
+          cppcheck \
+            --enable=all \
+            --inconclusive \
+            --force \
+            --inline-suppr \
+            --error-exitcode=1 \
+            --suppress=missingIncludeSystem \
+            --suppress=unusedFunction \
+            --language=c \
+            --std=c11 \
+            --template=gcc \
+            --file-filter='*.c' \
+            --file-filter='*.h' \
+            --check-level=exhaustive \
+            src/
