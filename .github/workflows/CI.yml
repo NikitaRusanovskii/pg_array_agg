@@ -66,8 +66,6 @@ jobs:
             --language=c \
             --std=c11 \
             --template=gcc \
-            --file-filter='pg_array_agg.c' \
-            --file-filter='utilfunc.c' \
-            --file-filter='utilfunc.h' \
+            --file-filter='*.c | *.h' \
             --check-level=exhaustive \
             src/
