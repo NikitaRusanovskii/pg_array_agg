@@ -68,3 +68,40 @@ jobs:
             --file-filter='*.h' \
             --check-level=exhaustive \
             src/
+  sanitizers:
+    name: ASan & UBSan
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v7
+      - name: setup postgres
+        uses: ankane/setup-postgres@v1
+        with:
+          postgres-version: 18
+          dev-files: true
+
+      - name: make postgres extension
+        run: make USE_PGXS=1
+        env:
+          PG_CFLAGS: -DUSE_ASSERT_CHECKING -fsanitize=address,undefined |
+                      -fno-sanitize-recover=all -fno-omit-frame-pointer | 
+                      -Wall -Wextra -Werror -Wno-unused-parameter |
+                      -Wno-sign-compare -Wno-missing-field-initializers
+      - name: install postgres extension
+        run: |
+          export PG_CONFIG=`which pg_config`
+          sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
+      - name: install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install libipc-run-perl
+      - name: run tests under sans
+        env:
+          ASAN_OPTIONS: detect_leaks=0
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: |
+          make installcheck USE_PGXS=1
+      - if: ${{ failure() }}
+        run: cat regression.diffs
