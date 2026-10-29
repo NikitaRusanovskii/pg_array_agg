@@ -252,9 +252,9 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     array_free_iterator(arr_it);
     total = int64_to_numeric(count);
     #if PG_VERSION_NUM >= 190000
-    final_res = numeric_div_safe(res, tmp_elem, NULL);
+    final_res = numeric_div_safe(res, total, NULL);
     #else
-    final_res = numeric_div_opt_error(res, tmp_elem, &err);
+    final_res = numeric_div_opt_error(res, total, &err);
     if(err) {
         pfree(res);
         pfree(tmp_elem);
