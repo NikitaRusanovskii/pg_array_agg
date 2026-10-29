@@ -60,9 +60,7 @@ jobs:
             --force \
             --inline-suppr \
             --error-exitcode=1 \
-            --suppress=missingIncludeSystem \
             --suppress=missingInclude \
-            --suppress=unusedFunction \
             --language=c \
             --std=c11 \
             --template=gcc \
