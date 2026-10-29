@@ -37,12 +37,12 @@ Datum array_product(PG_FUNCTION_ARGS) {
     Oid expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID}; // они должны совпадать с функцией валидатором. Это небезопасно с точки зрения рефакторинга. Надо уединить их в одном месте
     ArrayIterator arr_it;
     Datum elem;
-    bool is_null;
+    bool is_null = false;
     Numeric res;
     Numeric tmp_elem;
     Numeric tmp_res;
     #if PG_VERSION_NUM < 190000
-    bool err;
+    bool err = false;
     #endif
 
     if (PG_NARGS() == 0) PG_RETURN_NULL();
