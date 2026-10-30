@@ -301,4 +301,186 @@ SELECT array_none(ARRAY[1, 2, 3], 'x == ''abc''');
 SELECT array_none(ARRAY[1, 2, 3], 'x % 0 = 0');
 SELECT array_none(ARRAY[true, false], 'x == 1');
 
+-- Дополнительные тесты
+
+-- ДОПОЛНИТЕЛЬНЫЕ ТЕСТЫ
+
+CREATE TEMP TABLE huge_arr AS
+SELECT
+    ARRAY(
+        SELECT 1
+        FROM generate_series(1, 1000000)
+    )::integer[] AS million_int,
+
+    ARRAY(
+        SELECT 1::smallint
+        FROM generate_series(1, 65000000)
+    ) AS sixtyfive_million_smallint;
+
+
+-- array_product
+
+-- Массив из 1 млн элементов
+SELECT array_product(million_int) FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_product(sixtyfive_million_smallint) FROM huge_arr;
+
+-- Переполнение numeric
+SELECT array_product(array_fill(100000, ARRAY[10000000]));
+
+-- Различные нижние границы массива
+SELECT array_product(array_fill(1, ARRAY[3], ARRAY[lb]))
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+
+-- array_sum
+
+-- Массив из 1 млн элементов
+SELECT array_sum(million_int) FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_sum(sixtyfive_million_smallint) FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_sum(array_fill(1, ARRAY[3], ARRAY[lb]))
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+
+-- array_avg
+
+-- Массив из 1 млн элементов
+SELECT array_avg(million_int) FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_avg(sixtyfive_million_smallint) FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_avg(array_fill(1, ARRAY[3], ARRAY[lb]))
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+
+-- array_min
+
+-- Массив из 1 млн элементов
+SELECT array_min(million_int) FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_min(sixtyfive_million_smallint) FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_min(array_fill(1, ARRAY[3], ARRAY[lb]))
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+
+-- array_max
+
+-- Массив из 1 млн элементов
+SELECT array_max(million_int) FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_max(sixtyfive_million_smallint) FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_max(array_fill(1, ARRAY[3], ARRAY[lb]))
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+
+-- array_count
+
+-- Массив из 1 млн элементов
+SELECT array_count(million_int, 1) FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_count(sixtyfive_million_smallint, 1::smallint)
+FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_count(array_fill(1, ARRAY[3], ARRAY[lb]), 1)
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+
+-- array_count_if
+
+-- Массив из 1 млн элементов
+SELECT array_count_if(million_int, 'x == 1')
+FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_count_if(sixtyfive_million_smallint, 'x == 1')
+FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_count_if(array_fill(1, ARRAY[3], ARRAY[lb]), 'x == 1')
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+-- Пустой предикат обработка согласно ТЗ
+SELECT array_count_if(ARRAY[1, 2, 3], '');
+
+-- Ошибка парсинга
+SELECT array_count_if(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
+
+
+-- array_all
+
+-- Массив из 1 млн элементов
+SELECT array_all(million_int, 'x == 1')
+FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_all(sixtyfive_million_smallint, 'x == 1')
+FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_all(array_fill(1, ARRAY[3], ARRAY[lb]), 'x == 1')
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+-- Пустой предикат обработка согласно ТЗ
+SELECT array_all(ARRAY[1, 2, 3], '');
+
+-- Ошибка парсинга
+SELECT array_all(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
+
+
+-- array_any
+
+-- Массив из 1 млн элементов
+SELECT array_any(million_int, 'x == 1')
+FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_any(sixtyfive_million_smallint, 'x == 1')
+FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_any(array_fill(1, ARRAY[3], ARRAY[lb]), 'x == 1')
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+-- Пустой предикат обработка согласно ТЗ
+SELECT array_any(ARRAY[1, 2, 3], '');
+
+-- Ошибка парсинга
+SELECT array_any(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
+
+-- array_none
+
+-- Массив из 1 млн элементов
+SELECT array_none(million_int, 'x == 1')
+FROM huge_arr;
+
+-- Массив из 65 млн элементов smallint
+SELECT array_none(sixtyfive_million_smallint, 'x == 1')
+FROM huge_arr;
+
+-- Различные нижние границы массива
+SELECT array_none(array_fill(1, ARRAY[3], ARRAY[lb]), 'x == 1')
+FROM (VALUES (0), (1), (9)) AS bounds(lb);
+
+-- Пустой предикат обработка согласно ТЗ
+SELECT array_none(ARRAY[1, 2, 3], '');
+
+-- Ошибка парсинга
+SELECT array_none(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
+
+DROP TABLE huge_arr;
 DROP EXTENSION IF EXISTS pg_array_agg;
