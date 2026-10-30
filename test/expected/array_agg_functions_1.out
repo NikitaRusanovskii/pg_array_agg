@@ -1209,7 +1209,6 @@ ERROR:  execute_predicate: division by zero
 SELECT array_none(ARRAY[true, false], 'x == 1');
 ERROR:  array_none: incorrect datatype
 -- Дополнительные тесты
--- ДОПОЛНИТЕЛЬНЫЕ ТЕСТЫ
 CREATE TEMP TABLE huge_arr AS
 SELECT
     ARRAY(
