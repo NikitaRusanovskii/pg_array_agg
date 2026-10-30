@@ -661,14 +661,12 @@ SELECT array_count(ARRAY[1, 2, 3], '1'::text);
 ERROR:  function array_count(integer[], text) does not exist
 LINE 1: SELECT array_count(ARRAY[1, 2, 3], '1'::text);
                ^
-DETAIL:  No function of that name accepts the given argument types.
-HINT:  You might need to add explicit type casts.
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 SELECT array_count(ARRAY['a', 'b'], 1);
 ERROR:  function array_count(text[], integer) does not exist
 LINE 1: SELECT array_count(ARRAY['a', 'b'], 1);
                ^
-DETAIL:  No function of that name accepts the given argument types.
-HINT:  You might need to add explicit type casts.
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 --- ======================================================================================
 --- ======================================================================================
 -- ТЕСТЫ array_count_if:
@@ -1236,7 +1234,7 @@ SELECT array_product(sixtyfive_million_smallint) FROM huge_arr;
 
 -- Переполнение numeric
 SELECT array_product(array_fill(100000, ARRAY[10000000]));
-ERROR:  value overflows numeric format
+ERROR:  array_product: An error occurred during a numeric multiplication.
 -- Различные нижние границы массива
 SELECT array_product(array_fill(1, ARRAY[3], ARRAY[lb]))
 FROM (VALUES (0), (1), (9)) AS bounds(lb);
