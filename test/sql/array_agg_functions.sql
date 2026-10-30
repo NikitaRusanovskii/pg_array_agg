@@ -302,9 +302,6 @@ SELECT array_none(ARRAY[1, 2, 3], 'x % 0 = 0');
 SELECT array_none(ARRAY[true, false], 'x == 1');
 
 -- Дополнительные тесты
-
--- ДОПОЛНИТЕЛЬНЫЕ ТЕСТЫ
-
 CREATE TEMP TABLE huge_arr AS
 SELECT
     ARRAY(
