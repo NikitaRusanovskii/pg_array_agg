@@ -1857,5 +1857,6 @@ SELECT array_all(ARRAY[1, NULL, 3], 'x > 0');
 -----------
  t
 (1 row)
+
 DROP TABLE huge_arr;
 DROP EXTENSION IF EXISTS pg_array_agg;

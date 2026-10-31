@@ -1513,7 +1513,6 @@ SELECT array_none(ARRAY[1, 2, 3], '');
 -- Ошибка парсинга
 SELECT array_none(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
 ERROR:  syntaxical_analize: Invalid token array format. Array len: 10
-
 -- Ошибка парсинга имени в предикате (исправлена. Ранее обрезался 1 символ сразу после последнего символа имени переменной)
 SELECT array_all(ARRAY[1, 2, 3, 4, 5], "x<=5"); -- ожидаемый результат: t
 ERROR:  column "x<=5" does not exist
@@ -1856,5 +1855,6 @@ SELECT array_all(ARRAY[1, NULL, 3], 'x > 0');
 -----------
  t
 (1 row)
+
 DROP TABLE huge_arr;
 DROP EXTENSION IF EXISTS pg_array_agg;
