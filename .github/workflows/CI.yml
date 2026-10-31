@@ -37,7 +37,7 @@ jobs:
           sudo apt-get install libipc-run-perl
       - run: make installcheck USE_PGXS=1
       - if: ${{ failure() }}
-        run: cat regression.diffs
+        run: test/cat regression.diffs
   cppcheck:
     name: Cppcheck
     runs-on: ubuntu-24.04
