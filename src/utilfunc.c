@@ -85,6 +85,7 @@ static int32 lexical_analyze(const char* predicate_string, int32 len, Token* res
             (unsigned char) predicate_string[i] == '_' ||
             (i > name_start && isalnum((unsigned char)predicate_string[i]))) i++;
             result[token_position++] = construct_token(T_VARIABLE, &predicate_string[name_start], i - name_start);
+            i--;
         }
         else if (predicate_string[i] ==  '%') {
             result[token_position++] = construct_token(T_MOD, &predicate_string[i], 1);
@@ -173,6 +174,7 @@ static int32 lexical_analyze(const char* predicate_string, int32 len, Token* res
                      errmsg("lexical_analyze: invalid token_lenght = 0")));
 
             result[token_position++] = construct_token(T_NUMBER, &predicate_string[start], token_length);
+            i--;
         }
     }
     result[token_position++] = construct_token(T_END, NULL, 0);

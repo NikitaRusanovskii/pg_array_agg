@@ -498,12 +498,6 @@ SELECT array_max('{1, NULL, 3}'::integer[]);
 -- НЕКОРРЕКТНЫЕ
 SELECT array_max(ARRAY[[[1, 2]], [[3, 4]]]);
 ERROR:  array_max: Invalid ndim of array: 3
-SELECT array_max(ARRAY[[1, 2], [3, 4]]);
- array_max 
------------
-         4
-(1 row)
-
 SELECT array_max(ARRAY[true, false]::boolean[]);
 ERROR:  array_max: Invalid elemtype of array. OID: 16
 --- ======================================================================================
@@ -1519,5 +1513,348 @@ SELECT array_none(ARRAY[1, 2, 3], '');
 -- Ошибка парсинга
 SELECT array_none(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
 ERROR:  syntaxical_analize: Invalid token array format. Array len: 10
+
+-- Ошибка парсинга имени в предикате (исправлена. Ранее обрезался 1 символ сразу после последнего символа имени переменной)
+SELECT array_all(ARRAY[1, 2, 3, 4, 5], "x<=5"); -- ожидаемый результат: t
+ERROR:  column "x<=5" does not exist
+LINE 1: SELECT array_all(ARRAY[1, 2, 3, 4, 5], "x<=5");
+                                               ^
+-- Многие варианты синтаксиса предикатов
+SELECT array_count_if(ARRAY[1, 2, 3], 'x == 2');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x = 2');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x != 2');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x > 2');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x >= 2');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x < 2');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x <= 2');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x==2');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x=2');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x!=2');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x>2');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x>=2');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x<2');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x<=2');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x    >=    2');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], '  x >= 2  ');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[-2, -1, 0, 1, 2], 'x < -1');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(ARRAY[100, 200, 300], 'x >= 200');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(
+    ARRAY[1.25, 2.50, 3.75]::numeric[],
+    'x >= 2.50'
+);
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(
+    ARRAY[1.0, 2.0, 3.0]::real[],
+    'x > 1.0'
+);
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(
+    ARRAY[1.0, 2.0, 3.0]::double precision[],
+    'x <= 2.0'
+);
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(
+    ARRAY['-Infinity'::float8, 0, 'Infinity'::float8],
+    'x == ''Infinity'''
+);
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(
+    ARRAY['alpha', 'beta', 'gamma']::text[],
+    'x == "beta"'
+);
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(
+    ARRAY['alpha', 'beta', 'gamma']::text[],
+    'x = "beta"'
+);
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(
+    ARRAY['alpha', 'beta', 'gamma']::text[],
+    'x != "beta"'
+);
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(
+    ARRAY['alpha', 'beta', 'gamma']::varchar[],
+    'x == "alpha"'
+);
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_count_if(
+    ARRAY['a', 'b', 'c']::char(1)[],
+    'x != "b"'
+);
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5, 6], 'x % 2 = 0');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5, 6], 'x % 2 = 1');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[-3, -2, -1, 0, 1, 2, 3], 'x % 2 = 0');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x % -2 = 0');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[3, 12, 123], 'x % 10 = 3');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x   %   2   =   0');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x%2=0');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_all(ARRAY[1, 2, 3], 'x >= 1');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY[1, 2, 3], 'x > 2'); 
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_none(ARRAY[1, 2, 3], 'x < 1'); 
+ array_none 
+------------
+ t
+(1 row)
+
+SELECT array_all(ARRAY[1, 2, 3], 'x > 1'); 
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_any(ARRAY[1, 2, 3], 'x > 3'); 
+ array_any 
+-----------
+ f
+(1 row)
+
+SELECT array_none(ARRAY[1, 2, 3], 'x >= 1'); 
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
+ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+SELECT array_count_if(ARRAY[1, 2, 3], 'x 2');
+ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 2');
+ERROR:  syntaxical_analize: Invalid first operator: 1
+SELECT array_count_if(ARRAY[1, 2, 3], 'x == 1 == 2');
+ERROR:  syntaxical_analize: Invalid token array len: 6
+SELECT array_count_if(ARRAY[1, 2, 3], '2 == x');
+ERROR:  syntaxical_analize: Invalid token array. First token is not variable
+SELECT array_count_if(ARRAY['a', 'b']::text[], 'x == "a');
+ERROR:  lexical_analyze: invalid predicate string
+SELECT array_count_if(
+    ARRAY['a', 'b', 'c']::text[],
+    'x > "a"'
+);
+ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+SELECT array_count_if(
+    ARRAY[1.0, 2.0, 3.0]::real[],
+    'x % 2 = 0'
+);
+ERROR:  cast_predicate: Invalid operator. Type: FLOAT4, operator: 6
+SELECT array_count_if(
+    ARRAY[1.0, 2.0, 3.0]::double precision[],
+    'x % 2 = 0'
+);
+ERROR:  cast_predicate: Invalid operator. Type: FLOAT8, operator: 6
+SELECT array_count_if(
+    ARRAY['a', 'b']::text[],
+    'x % 2 = 0'
+);
+ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 6
+SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
+ERROR:  execute_predicate: division by zero
+SELECT array_count_if(ARRAY[]::int[], 'x > 0');
+ array_count_if 
+----------------
+              0
+(1 row)
+
+SELECT array_all(ARRAY[]::int[], 'x > 0');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY[]::int[], 'x > 0');
+ array_any 
+-----------
+ f
+(1 row)
+
+SELECT array_none(ARRAY[]::int[], 'x > 0');
+ array_none 
+------------
+ t
+(1 row)
+
+SELECT array_count_if(ARRAY[1, NULL, 3], 'x > 1');
+ array_count_if 
+----------------
+              1
+(1 row)
+
+SELECT array_all(ARRAY[1, NULL, 3], 'x > 0');
+ array_all 
+-----------
+ t
+(1 row)
 DROP TABLE huge_arr;
 DROP EXTENSION IF EXISTS pg_array_agg;

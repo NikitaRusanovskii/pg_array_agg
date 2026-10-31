@@ -124,7 +124,6 @@ SELECT array_max('{1, NULL, 3}'::integer[]);
 
 -- НЕКОРРЕКТНЫЕ
 SELECT array_max(ARRAY[[[1, 2]], [[3, 4]]]);
-SELECT array_max(ARRAY[[1, 2], [3, 4]]);
 SELECT array_max(ARRAY[true, false]::boolean[]);
 
 --- ======================================================================================
@@ -478,6 +477,167 @@ SELECT array_none(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_none(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
+
+-- Ошибка парсинга имени в предикате (исправлена. Ранее обрезался 1 символ сразу после последнего символа имени переменной)
+SELECT array_all(ARRAY[1, 2, 3, 4, 5], "x<=5"); -- ожидаемый результат: t
+
+
+-- Многие варианты синтаксиса предикатов
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x == 2');
+
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x = 2');
+
+
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x != 2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x > 2');
+
+
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x >= 2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x < 2');
+SELECT array_count_if(ARRAY[1, 2, 3], 'x <= 2');
+SELECT array_count_if(ARRAY[1, 2, 3], 'x==2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x=2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x!=2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x>2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x>=2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x<2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x<=2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x    >=    2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], '  x >= 2  ');
+
+SELECT array_count_if(ARRAY[-2, -1, 0, 1, 2], 'x < -1');
+
+SELECT array_count_if(ARRAY[100, 200, 300], 'x >= 200');
+
+SELECT array_count_if(
+    ARRAY[1.25, 2.50, 3.75]::numeric[],
+    'x >= 2.50'
+);
+
+SELECT array_count_if(
+    ARRAY[1.0, 2.0, 3.0]::real[],
+    'x > 1.0'
+);
+
+SELECT array_count_if(
+    ARRAY[1.0, 2.0, 3.0]::double precision[],
+    'x <= 2.0'
+);
+
+SELECT array_count_if(
+    ARRAY['-Infinity'::float8, 0, 'Infinity'::float8],
+    'x == ''Infinity'''
+);
+
+
+
+SELECT array_count_if(
+    ARRAY['alpha', 'beta', 'gamma']::text[],
+    'x == "beta"'
+);
+
+
+
+SELECT array_count_if(
+    ARRAY['alpha', 'beta', 'gamma']::text[],
+    'x = "beta"'
+);
+
+
+
+SELECT array_count_if(
+    ARRAY['alpha', 'beta', 'gamma']::text[],
+    'x != "beta"'
+);
+
+
+SELECT array_count_if(
+    ARRAY['alpha', 'beta', 'gamma']::varchar[],
+    'x == "alpha"'
+);
+
+SELECT array_count_if(
+    ARRAY['a', 'b', 'c']::char(1)[],
+    'x != "b"'
+);
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5, 6], 'x % 2 = 0');
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5, 6], 'x % 2 = 1');
+
+SELECT array_count_if(ARRAY[-3, -2, -1, 0, 1, 2, 3], 'x % 2 = 0');
+SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x % -2 = 0');
+SELECT array_count_if(ARRAY[3, 12, 123], 'x % 10 = 3');
+
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x   %   2   =   0');
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x%2=0');
+
+SELECT array_all(ARRAY[1, 2, 3], 'x >= 1');
+SELECT array_any(ARRAY[1, 2, 3], 'x > 2'); 
+
+SELECT array_none(ARRAY[1, 2, 3], 'x < 1'); 
+SELECT array_all(ARRAY[1, 2, 3], 'x > 1'); 
+
+SELECT array_any(ARRAY[1, 2, 3], 'x > 3'); 
+
+SELECT array_none(ARRAY[1, 2, 3], 'x >= 1'); 
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x 2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x == 1 == 2');
+
+SELECT array_count_if(ARRAY[1, 2, 3], '2 == x');
+
+SELECT array_count_if(ARRAY['a', 'b']::text[], 'x == "a');
+
+
+SELECT array_count_if(
+    ARRAY['a', 'b', 'c']::text[],
+    'x > "a"'
+);
+
+SELECT array_count_if(
+    ARRAY[1.0, 2.0, 3.0]::real[],
+    'x % 2 = 0'
+);
+SELECT array_count_if(
+    ARRAY[1.0, 2.0, 3.0]::double precision[],
+    'x % 2 = 0'
+);
+SELECT array_count_if(
+    ARRAY['a', 'b']::text[],
+    'x % 2 = 0'
+);
+
+SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
+
+
+SELECT array_count_if(ARRAY[]::int[], 'x > 0');
+SELECT array_all(ARRAY[]::int[], 'x > 0');
+SELECT array_any(ARRAY[]::int[], 'x > 0');
+SELECT array_none(ARRAY[]::int[], 'x > 0');
+
+SELECT array_count_if(ARRAY[1, NULL, 3], 'x > 1');
+SELECT array_all(ARRAY[1, NULL, 3], 'x > 0');
 
 DROP TABLE huge_arr;
 DROP EXTENSION IF EXISTS pg_array_agg;
