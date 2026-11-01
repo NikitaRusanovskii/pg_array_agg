@@ -58,6 +58,14 @@ typedef struct {
     int32 lenght; // длина подстроки
 } Token;
 
+typedef struct {
+    Token token;
+    ASTNode* left, right, parent;
+    Datum element;
+    Oid target_oid;
+    bool is_const;
+} ASTNode;
+
 bool type_is_expected(Oid type_oid, const Oid* expected_types, uint32 len);
 int32 cmp_op(Oid target_oid, Datum first, Datum second, Oid collid);
 Numeric datum_to_numeric(Datum element, Oid type_oid);
