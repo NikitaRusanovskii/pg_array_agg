@@ -180,7 +180,7 @@ static int32 lexical_analyze(const char* predicate_string, int32 len, Token* res
     result[token_position++] = construct_token(T_END, NULL, 0);
     return token_position;
 }
-/*
+
 static int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predicate) {
     // %: x op const = const 5 токенов + конечный = 6 токенов
     // др: x op const
@@ -268,7 +268,11 @@ static int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate
         predicate->const2len = parsed_tokens[const2pos].lenght;
     }
     return 0;
-}*/
+}
+
+static int32 prepare_ast(Token* parsed_tokens, int32 len, ) {
+    return 0;
+}
 
 static void cast_predicate(ParsedPredicate* parsed, Predicate* result, Oid target_oid) {
     if (parsed == NULL)

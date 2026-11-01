@@ -1,5 +1,6 @@
 #pragma once
 #include "utilfunc.h"
+#include "pratt_parser.h"
 
 #define MAX 100
 #define T ASTNode
