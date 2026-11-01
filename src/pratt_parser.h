@@ -75,3 +75,26 @@ bool match(PState* state, TokenType t) {
     }
     else {} // ereport?
 }
+
+typedef struct {
+    int32 left, right;
+} BindPower;
+
+BindPower get_bp(TokenType t) {
+    switch (t) {
+        case T_MOD:
+            return (BindPower){20, 21};
+        case T_EQ:
+        case T_GR: 
+        case T_NEQ:
+        case T_LE: 
+        case T_GRE:
+        case T_LEE:
+        case T_SEQ:
+            return (BindPower){10, 11};
+
+        default:
+            return (BindPower){-1, -1};
+    }
+} 
+
