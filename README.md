@@ -654,6 +654,23 @@
 | `{...}` | `x % 0 = ...` | `ERROR` |
 | `{}` | `''` | `true` |
 
+## Алгоритмическая сложность функций:
+* Обозначим за O(func) сложность некоторой функции func
+* n - кол-во элементов в массива
+* m - длина строки предиката
+* res - результирующий элемент
+| Функция | Время | Память |
+|---|---|---|
+| `array_product` | `O(n * O(mul))` | `O(1) + O(res)` |
+| `array_sum` | `O(n * O(add))` | `O(1) + O(res)` |
+| `array_avg` | `O(n * O(add) + O(div))` | `O(1) + O(res)` |
+| `array_min` | `O(n * O(cmp))` | `O(1)` |
+| `array_max` | `O(n * O(cmp))` | `O(1)` |
+| `array_count` | `O(n * O(cmp))` | `O(1)` |
+| `array_count_if` | `O(m + n * O(exec_predicate))` | `O(m)` |
+| `array_all` | `O(m + n * O(exec_predicate))` | `O(m)` |
+| `array_any` | `O(m + n * O(exec_predicate))` | `O(m)` |
+| `array_none` | `O(m + n * O(exec_predicate))` | `O(m)` |
 ## Описание вспомогательных функций 
 
 ### `bool type_is_expected(Oid type_oid, const Oid* expected_types, uint32 len)`
