@@ -1856,5 +1856,30 @@ SELECT array_all(ARRAY[1, NULL, 3], 'x > 0');
  t
 (1 row)
 
+-- пустой предикат + пустой массив
+SELECT array_count_if('{}'::int[], '');
+ array_count_if 
+----------------
+              0
+(1 row)
+
+SELECT array_any('{}'::int[], '');
+ array_any 
+-----------
+ f
+(1 row)
+
+SELECT array_all('{}'::int[], '');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_none('{}'::int[], '');
+ array_none 
+------------
+ t
+(1 row)
+
 DROP TABLE huge_arr;
 DROP EXTENSION IF EXISTS pg_array_agg;

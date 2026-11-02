@@ -639,5 +639,12 @@ SELECT array_none(ARRAY[]::int[], 'x > 0');
 SELECT array_count_if(ARRAY[1, NULL, 3], 'x > 1');
 SELECT array_all(ARRAY[1, NULL, 3], 'x > 0');
 
+-- пустой предикат + пустой массив
+
+SELECT array_count_if('{}'::int[], '');
+SELECT array_any('{}'::int[], '');
+SELECT array_all('{}'::int[], '');
+SELECT array_none('{}'::int[], '');
+
 DROP TABLE huge_arr;
 DROP EXTENSION IF EXISTS pg_array_agg;
