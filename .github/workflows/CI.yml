@@ -78,8 +78,8 @@ jobs:
         with:
           postgres-version: 18
           check-ub: yes
-      - run: make OPTFLAGS="" USE_PGXS=1
-      - run: sudo --preserve-env=PG_CONFIG make install USE_PGXS=1 with_llvm=0
-      - run: make installcheck USE_PGXS=1
+      - run: make USE_PGXS=1 OPTFLAGS=""
+      - run: make USE_PGXS=1 install --preserve-env=PG_CONFIG with_llvm=0
+      - run: make USE_PGXS=1 installcheck
       - if: ${{ failure() }}
         run: cat test/regression.diffs
