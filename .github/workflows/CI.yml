@@ -69,3 +69,15 @@ jobs:
             --file-filter='*.h' \
             --check-level=exhaustive \
             src/
+    
+  valgrind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ankane/setup-postgres-valgrind@v1
+        with:
+          postgres-version: 18
+          check-ub: yes
+      - run: make OPTFLAGS="" USE_PGXS=1
+      - run: sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
+      - run: make installcheck USE_PGXS=1
