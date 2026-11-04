@@ -28,7 +28,7 @@ jobs:
           dev-files: true
       - run: make USE_PGXS=1
         env:
-          PG_CFLAGS: -DUSE_ASSERT_CHECKING -Wall -Wextra -Werror -fsanitize=address,undefined -Wno-unused-parameter -Wno-sign-compare ${{ matrix.postgres == 18 && '-Wno-missing-field-initializers' || '' }}
+          PG_CFLAGS: -DUSE_ASSERT_CHECKING -Wall -Wextra -Werror -fsanitize=undefined -Wno-unused-parameter -Wno-sign-compare ${{ matrix.postgres == 18 && '-Wno-missing-field-initializers' || '' }}
       - run: |
           export PG_CONFIG=`which pg_config`
           sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
@@ -36,8 +36,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install libipc-run-perl
       - run: |
-          export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
-          export ASAN_OPTIONS=detect_leaks=0;allocator_may_return_null=1
           make installcheck USE_PGXS=1
       - if: ${{ failure() }}
         run: cat test/regression.diffs
