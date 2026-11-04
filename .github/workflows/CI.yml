@@ -80,7 +80,7 @@ jobs:
           check-ub: yes
       - run: make USE_PGXS=1 OPTFLAGS=""
       - run: |
-         export PG_CONFIG='which pg_config'
+         export PG_CONFIG="$(which pg_config)"
          sudo --preserve-env=PG_CONGIG make USE_PGXS=1 with_llvm=0 install
       - run: make USE_PGXS=1 installcheck
       - if: ${{ failure() }}
