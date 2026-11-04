@@ -81,3 +81,5 @@ jobs:
       - run: make OPTFLAGS="" USE_PGXS=1
       - run: sudo --preserve-env=PG_CONFIG make install USE_PGXS=1 with_llvm=0
       - run: make installcheck USE_PGXS=1
+      - if: ${{ failure() }}
+        run: cat test/regression.diffs
