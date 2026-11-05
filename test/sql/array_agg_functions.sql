@@ -1,5 +1,4 @@
 
-CREATE EXTENSION IF NOT EXISTS pg_array_agg;
 --- ======================================================================================
 -- ТЕСТЫ array_product:
 -- КОРРЕКТНЫЕ
@@ -647,4 +646,3 @@ SELECT array_all('{}'::int[], '');
 SELECT array_none('{}'::int[], '');
 
 DROP TABLE huge_arr;
-DROP EXTENSION IF EXISTS pg_array_agg;
