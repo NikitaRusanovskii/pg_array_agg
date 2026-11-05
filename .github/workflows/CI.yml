@@ -1,4 +1,5 @@
 name: CI
+
 on: [push, pull_request]
 
 jobs:
@@ -20,25 +21,33 @@ jobs:
             os: ubuntu-22.04
           - postgres: 15
             os: ubuntu-22.04-arm
+
     steps:
       - uses: actions/checkout@v7
+
       - uses: ankane/setup-postgres@v1
         with:
           postgres-version: ${{ matrix.postgres }}
           dev-files: true
+
       - run: make USE_PGXS=1
         env:
           PG_CFLAGS: -DUSE_ASSERT_CHECKING -Wall -Wextra -Werror -fsanitize=undefined -Wno-unused-parameter -Wno-sign-compare ${{ matrix.postgres == 18 && '-Wno-missing-field-initializers' || '' }}
+
       - run: |
           export PG_CONFIG=`which pg_config`
           sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
+
       - run: |
           sudo apt-get update
           sudo apt-get install libipc-run-perl
+
       - run: |
           make installcheck USE_PGXS=1
+
       - if: ${{ failure() }}
         run: cat test/regression.diffs
+
   cppcheck:
     name: Cppcheck
     runs-on: ubuntu-24.04
@@ -52,7 +61,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install cppcheck
-        
+
       - name: checking
         run: |
           cppcheck \
@@ -69,23 +78,55 @@ jobs:
             --file-filter='*.h' \
             --check-level=exhaustive \
             src/
-    
+
   valgrind:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v7
+
       - uses: ankane/setup-postgres-valgrind@v1
         with:
           postgres-version: 18
           check-ub: yes
+
       - run: |
           export PG_CONFIG=`which pg_config`
           make OPTFLAGS="" USE_PGXS=1
+
       - run: |
           export PG_CONFIG=`which pg_config`
           sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
-      - run: |
+
+      - name: Regression tests — arithmetic
+        run: |
           export PG_CONFIG=`which pg_config`
-          make installcheck USE_PGXS=1
+          make installcheck USE_PGXS=1 REGRESS=agg_arith
+
+      - name: Regression tests — min/max
+        run: |
+          export PG_CONFIG=`which pg_config`
+          make installcheck USE_PGXS=1 REGRESS=agg_minmax
+
+      - name: Regression tests — count
+        run: |
+          export PG_CONFIG=`which pg_config`
+          make installcheck USE_PGXS=1 REGRESS=agg_count
+
+      - name: Regression tests — count_if
+        run: |
+          export PG_CONFIG=`which pg_config`
+          make installcheck USE_PGXS=1 REGRESS=agg_count_if
+
+      - name: Regression tests — all/any/none
+        run: |
+          export PG_CONFIG=`which pg_config`
+          make installcheck USE_PGXS=1 REGRESS=agg_allanyone
+
+      - name: Regression tests — additional
+        run: |
+          export PG_CONFIG=`which pg_config`
+          make installcheck USE_PGXS=1 REGRESS=agg_additional
+
       - if: ${{ failure() }}
         run: cat test/regression.diffs
