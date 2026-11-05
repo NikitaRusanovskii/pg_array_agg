@@ -76,10 +76,14 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ankane/setup-postgres-valgrind@v1
         with:
-          postgres-version: 16
+          postgres-version: 18
           check-ub: yes
-      - run: make USE_PGXS=1 OPTFLAGS=""
-      - run: sudo --preserve-env=PG_CONFIG make USE_PGXS=1 with_llvm=0 install
-      - run: make USE_PGXS=1 installcheck
-      - if: ${{ failure() }}
-        run: cat test/regression.diffs
+      - run: |
+          export PG_CONFIG=`which pg_config`
+          sudo --preserve-env=PG_CONFIG make OPTFLAGS="" USE_PGXS=1
+      - run: |
+          export PG_CONFIG=`which pg_config`
+          sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
+      - run: |
+          export PG_CONFIG=`which pg_config`
+          sudo --preserve-env=PG_CONFIG make installcheck USE_PGXS=1
