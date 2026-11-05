@@ -79,14 +79,11 @@ jobs:
           postgres-version: 18
           check-ub: yes
       - run: |
-          - name: building...
           export PG_CONFIG=`which pg_config`
           make OPTFLAGS="" USE_PGXS=1
       - run: |
-          - name: installing...
           export PG_CONFIG=`which pg_config`
           sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
       - run: |
-          - name: testing...
           export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1
