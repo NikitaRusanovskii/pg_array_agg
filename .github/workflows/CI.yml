@@ -87,5 +87,7 @@ jobs:
       - run: |
           export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1
+          cat test/results/array_agg_functions.txt
       - if: ${{ failure() }}
         run: cat test/regression.diffs
+
