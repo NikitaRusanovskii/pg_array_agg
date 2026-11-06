@@ -80,70 +80,70 @@ jobs:
             src/
 
   valgrind:
+    name: Valgrind + UBSan
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v7
 
-      - uses: ankane/setup-postgres-valgrind@v1
+      - name: Setup PostgreSQL with Valgrind
+        uses: ankane/setup-postgres-valgrind@v1
         with:
           postgres-version: 18
           check-ub: yes
+          track-origins: yes
 
-      - run: |
-          export PG_CONFIG=`which pg_config`
-          make OPTFLAGS="" USE_PGXS=1
-      - run: |
-          export PG_CONFIG=`which pg_config`
+      - name: Build extension
+        run: |
+          export PG_CONFIG=$(which pg_config)
+          make USE_PGXS=1 OPTFLAGS="" \
+            PG_CFLAGS="-fsanitize=undefined -fno-sanitize-recover=all" \
+            PG_LDFLAGS="-fsanitize=undefined"
+
+      - name: Install extension
+        run: |
+          export PG_CONFIG=$(which pg_config)
           sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
 
       - name: Regression tests — arithmetic
         run: |
-          export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_arith TAP_TESTS=0
-
-      - name: cat log dir
-        run: cat /tmp/pg-valgrind
 
       - name: Regression tests — min/max
         run: |
-          export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_minmax TAP_TESTS=0
-
-      - name: cat log dir
-        run: cat /tmp/pg-valgrind
 
       - name: Regression tests — count
         run: |
-          export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_count TAP_TESTS=0
-
-      - name: cat log dir
-        run: cat /tmp/pg-valgrind
 
       - name: Regression tests — count_if
         run: |
-          export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_count_if TAP_TESTS=0
-
-      - name: cat log dir
-        run: cat /tmp/pg-valgrind
 
       - name: Regression tests — all/any/none
         run: |
-          export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_allanynone TAP_TESTS=0
 
-      - name: cat log dir
-        run: cat /tmp/pg-valgrind
+      - name: Show regression diffs
+        if: failure()
+        run: |
+          if [ -f test/regression.diffs ]; then
+            cat test/regression.diffs
+          fi
 
-      - if: ${{ failure() }}
-        run: cat test/regression.diffs
-      - name: Upload Valgrind logs
+      - name: List diagnostic logs
+        if: always()
+        run: |
+          echo "===== Valgrind / UBSan logs ====="
+          find /tmp/pg-valgrind -maxdepth 1 -type f -print || true
+
+      - name: Upload Valgrind and UBSan logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: valgrind-logs-postgres-${{ matrix.postgres }}
+          name: valgrind-logs-postgres-18
           path: /tmp/pg-valgrind/
           if-no-files-found: warn
           retention-days: 14
