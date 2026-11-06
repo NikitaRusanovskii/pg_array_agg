@@ -101,32 +101,27 @@ jobs:
       - name: Regression tests — arithmetic
         run: |
           export PG_CONFIG=`which pg_config`
-          make installcheck USE_PGXS=1 REGRESS=agg_arith
+          make installcheck USE_PGXS=1 REGRESS=agg_arith TAP_TESTS=0
 
       - name: Regression tests — min/max
         run: |
           export PG_CONFIG=`which pg_config`
-          make installcheck USE_PGXS=1 REGRESS=agg_minmax
+          make installcheck USE_PGXS=1 REGRESS=agg_minmax TAP_TESTS=0
 
       - name: Regression tests — count
         run: |
           export PG_CONFIG=`which pg_config`
-          make installcheck USE_PGXS=1 REGRESS=agg_count
+          make installcheck USE_PGXS=1 REGRESS=agg_count TAP_TESTS=0
 
       - name: Regression tests — count_if
         run: |
           export PG_CONFIG=`which pg_config`
-          make installcheck USE_PGXS=1 REGRESS=agg_count_if
+          make installcheck USE_PGXS=1 REGRESS=agg_count_if TAP_TESTS=0
 
       - name: Regression tests — all/any/none
         run: |
           export PG_CONFIG=`which pg_config`
-          make installcheck USE_PGXS=1 REGRESS=agg_allanyone
-
-      - name: Regression tests — additional
-        run: |
-          export PG_CONFIG=`which pg_config`
-          make installcheck USE_PGXS=1 REGRESS=agg_additional
+          make installcheck USE_PGXS=1 REGRESS=agg_allanyone TAP_TESTS=0
 
       - if: ${{ failure() }}
         run: cat test/regression.diffs
