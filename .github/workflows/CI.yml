@@ -82,7 +82,6 @@ jobs:
   valgrind:
     name: Valgrind + UBSan
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v7
@@ -136,8 +135,11 @@ jobs:
       - name: List diagnostic logs
         if: always()
         run: |
-          echo "===== Valgrind / UBSan logs ====="
           find /tmp/pg-valgrind -maxdepth 1 -type f -print || true
+      - name: Fix diagnostic log permissions
+        if: always()
+        run: |
+          sudo chmod -R a+rX /tmp/pg-valgrind || true
 
       - name: Upload Valgrind and UBSan logs
         if: always()
