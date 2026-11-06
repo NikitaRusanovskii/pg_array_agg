@@ -93,7 +93,6 @@ jobs:
       - run: |
           export PG_CONFIG=`which pg_config`
           make OPTFLAGS="" USE_PGXS=1
-
       - run: |
           export PG_CONFIG=`which pg_config`
           sudo --preserve-env=PG_CONFIG make install USE_PGXS=1
@@ -103,25 +102,48 @@ jobs:
           export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_arith TAP_TESTS=0
 
+      - name: cat log dir
+        run: cat /tmp/pg-valgrind
+
       - name: Regression tests — min/max
         run: |
           export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_minmax TAP_TESTS=0
+
+      - name: cat log dir
+        run: cat /tmp/pg-valgrind
 
       - name: Regression tests — count
         run: |
           export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_count TAP_TESTS=0
 
+      - name: cat log dir
+        run: cat /tmp/pg-valgrind
+
       - name: Regression tests — count_if
         run: |
           export PG_CONFIG=`which pg_config`
           make installcheck USE_PGXS=1 REGRESS=agg_count_if TAP_TESTS=0
 
+      - name: cat log dir
+        run: cat /tmp/pg-valgrind
+
       - name: Regression tests — all/any/none
         run: |
           export PG_CONFIG=`which pg_config`
-          make installcheck USE_PGXS=1 REGRESS=agg_allanyone TAP_TESTS=0
+          make installcheck USE_PGXS=1 REGRESS=agg_allanynone TAP_TESTS=0
+
+      - name: cat log dir
+        run: cat /tmp/pg-valgrind
 
       - if: ${{ failure() }}
         run: cat test/regression.diffs
+      - name: Upload Valgrind logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: valgrind-logs-postgres-${{ matrix.postgres }}
+          path: /tmp/pg-valgrind/
+          if-no-files-found: warn
+          retention-days: 14
