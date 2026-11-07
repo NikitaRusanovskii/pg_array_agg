@@ -45,7 +45,6 @@ FROM (VALUES (0), (1), (9)) AS bounds(lb);
 
 -- Массив из 1 млн элементов
 SELECT array_avg(million_int) FROM huge_arr;
-
 -- Массив из 65 млн элементов smallint
 SELECT array_avg(sixtyfive_million_smallint) FROM huge_arr;
 

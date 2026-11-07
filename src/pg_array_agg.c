@@ -192,7 +192,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     Numeric tmp_elem;
     Numeric tmp_res;
     Numeric final_res;
-    int64 count;
+    uint64_t count;
     #if PG_VERSION_NUM < 190000
     bool err = false;
     #endif
@@ -257,8 +257,7 @@ Datum array_avg(PG_FUNCTION_ARGS) {
         res = tmp_res;
         count++;
     }
-
-    total = int64_to_numeric(count);
+    total = UInt64GetNumeric(count);
     #if PG_VERSION_NUM >= 190000
     final_res = numeric_div_safe(res, total, NULL);
     #else
@@ -406,7 +405,7 @@ Datum array_count(PG_FUNCTION_ARGS) {
     Oid const expected_types[] = CNT_ALLOWED_TYPES;
     ArrayIterator arr_it;
     Datum elem;
-    int32 result = 0;
+    uint64_t result = 0;
     bool is_null = false;
 
     if (PG_NARGS() < 2 ) PG_RETURN_NULL();
@@ -437,11 +436,14 @@ Datum array_count(PG_FUNCTION_ARGS) {
         }
 
         if (cmp_op(arr->elemtype, element, elem, PG_GET_COLLATION()) == 0) result++;
+        if (result > INT32_MAX) ereport(ERROR, 
+                                        errcode(ERRCODE_ARRAY_ELEMENT_ERROR),
+                                        errmsg("Too many elements in array"));
 
     }
     PG_FREE_IF_COPY(arr, 0);
     array_free_iterator(arr_it);
-    PG_RETURN_INT32(result);
+    PG_RETURN_INT32((int32)result);
 }
 
 Datum array_count_if(PG_FUNCTION_ARGS) {
@@ -453,7 +455,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
-    int32 result;
+    uint64_t result;
     int pred_len;
     Oid const expected_types[] = PRED_ALLOWED_TYPES;
 
@@ -489,13 +491,16 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
         }
 
         if (execute_predicate(&compiled_predicate, current_element,elemtype, collation)) result++;
+        if (result > INT32_MAX) ereport(ERROR, 
+                                        errcode(ERRCODE_ARRAY_ELEMENT_ERROR),
+                                        errmsg("Too many elements in array"));
     }
 
     PG_FREE_IF_COPY(arr, 0);
     PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
     free_predicate(&compiled_predicate);
-    PG_RETURN_INT32(result);
+    PG_RETURN_INT32((int32)result);
 }
 
 

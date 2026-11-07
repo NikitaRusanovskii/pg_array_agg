@@ -48,6 +48,12 @@ Numeric datum_to_numeric(Datum element, Oid type_oid) {
     return tmp;
 }
 
+Numeric UInt64GetNumeric(uint64_t num) {
+    char uint_buf[20] = {0};
+    sprintf(uint_buf, UINT64_FORMAT, num);
+    return DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(uint_buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
+}
+
 static Datum string_to_datum(const char* str, int len, Oid target_oid) {
     Oid input;
     Oid param;
@@ -482,10 +488,16 @@ bool execute_predicate(const Predicate* predicate, Datum element, Oid target_oid
             break;
         }
         case OP_MOD: {
+
+            Datum mod_res = mod_op(target_oid, element, predicate->const1, collid);
+
             res = (cmp_op(target_oid,
-                    mod_op(target_oid, element, predicate->const1, collid),
+                    mod_res,
                     predicate->const2,
                     collid) == 0);
+            if (target_oid == NUMERICOID) {
+                pfree(DatumGetNumeric(mod_res));
+            }
             break;
         }
         default: {
