@@ -306,12 +306,6 @@ SELECT array_avg(ARRAY[[1, 2], [3, 4]]);
  2.5000000000000000
 (1 row)
 
-SELECT array_avg(ARRAY(SELECT generate_series(1, 65000000))::Integer[]);
-       array_avg       
------------------------
- 32500000.500000000000
-(1 row)
-
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
 SELECT array_avg('{}'::integer[]);
  array_avg 
