@@ -8,10 +8,10 @@ MODULE_big = pg_array_agg
 
 OBJS = src/pg_array_agg.o src/utilfunc.o
 
-REGRESS = array_agg_functions
-REGRESS_OPTS = --inputdir=test --outputdir=test
+REGRESS = agg_allanynone agg_arith agg_count_if agg_count agg_minmax agg_additional
+REGRESS_OPTS = --inputdir=test --outputdir=test --load-extension=$(EXTENSION)
 ifdef USE_PGXS
-PG_CONFIG = pg_config
+PG_CONFIG ?= pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 else

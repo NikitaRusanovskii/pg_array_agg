@@ -64,3 +64,4 @@ Numeric datum_to_numeric(Datum element, Oid type_oid);
 int32 prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predicate, Oid collid);
 bool execute_predicate(const Predicate* predicate, Datum element, Oid target_oid, Oid collid);
 void free_predicate(const Predicate* predicate);
+Numeric UInt64GetNumeric(uint64_t num);

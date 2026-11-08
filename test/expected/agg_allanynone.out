@@ -1,0 +1,396 @@
+-- ТЕСТЫ array_all:
+-- КОРРЕКТНЫЕ
+SELECT array_all(ARRAY[1, 2, 3, 4], 'xab == 1');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all(ARRAY[1, 1], 'x == 1');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_all(ARRAY[2], 'x_a == 2');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_all('{1, 2, 1, 3}'::integer[], 'x == 1');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all('{1, 2, 3, 4}'::integer[], 'x > 1');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all('{1, 2}'::integer[], '_x == 3');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all('{Infinity}'::numeric[], '_ == ''Infinity''');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_all('{-Infinity}'::real[], 'x == ''-Infinity''');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_all('{NaN}'::double precision[], 'x == ''NaN''');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_all('{-0.0}'::numeric[], 'x == 0.0');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_all(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all('{}'::integer[], 'x == 1');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_all(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+ array_all 
+-----------
+ f
+(1 row)
+
+SELECT array_all(ARRAY[[1, 2], [3, 4]], 'x == 1');
+ array_all 
+-----------
+ f
+(1 row)
+
+-- ДОЛЖНЫ ВЕРНУТЬ NULL
+SELECT array_all(NULL::integer[], 'x == 1');
+ array_all 
+-----------
+ 
+(1 row)
+
+SELECT array_all(ARRAY[1, 2, 3], NULL::text);
+ array_all 
+-----------
+ 
+(1 row)
+
+-- НЕКОРРЕКТНЫЕ
+SELECT array_all(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
+ERROR:  array_all: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+SELECT array_all(ARRAY['a', 'b']::text[], 'x > ''a''');
+ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+SELECT array_all(ARRAY[1, 2, 3], 'x @@@ 1');
+ERROR:  syntaxical_analize: Invalid first operator: 1
+SELECT array_all(ARRAY[1, 2, 3], 'x ==');
+ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+SELECT array_all(ARRAY[1, 2, 3], 'x == ''abc''');
+ERROR:  invalid input syntax for type integer: "abc"
+SELECT array_all(ARRAY[1, 2, 3], 'x % 0 = 0');
+ERROR:  execute_predicate: division by zero
+SELECT array_all(ARRAY[true, false], 'x == 1');
+ERROR:  array_all: incorrect datatype
+-- ТЕСТЫ array_any:
+-- КОРРЕКТНЫЕ
+SELECT array_any(ARRAY[1, 2, 3, 4], 'x == 1');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY[1, 1], 'x == 1');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY[2], 'x == 2');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any('{1, 2, 1, 3}'::integer[], 'x == 1');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any('{1, 2, 3, 4}'::integer[], 'x > 1');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any('{1, 2}'::integer[], 'x == 3');
+ array_any 
+-----------
+ f
+(1 row)
+
+SELECT array_any('{Infinity}'::numeric[], 'x == ''Infinity''');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any('{-Infinity}'::real[], 'x == ''-Infinity''');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any('{NaN}'::double precision[], 'x == ''NaN''');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any('{-0.0}'::numeric[], 'x == 0.0');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any('{}'::integer[], 'x == 1');
+ array_any 
+-----------
+ f
+(1 row)
+
+SELECT array_any(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_any(ARRAY[[1, 2], [3, 4]], 'x == 1');
+ array_any 
+-----------
+ t
+(1 row)
+
+-- ДОЛЖНЫ ВЕРНУТЬ NULL
+SELECT array_any(NULL::integer[], 'x == 1');
+ array_any 
+-----------
+ 
+(1 row)
+
+SELECT array_any(ARRAY[1, 2, 3], NULL::text);
+ array_any 
+-----------
+ 
+(1 row)
+
+-- НЕКОРРЕКТНЫЕ
+SELECT array_any(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
+ERROR:  array_any: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+SELECT array_any(ARRAY['a', 'b']::text[], 'x > ''a''');
+ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+SELECT array_any(ARRAY[1, 2, 3], 'x @@@ 1');
+ERROR:  syntaxical_analize: Invalid first operator: 1
+SELECT array_any(ARRAY[1, 2, 3], 'x ==');
+ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+SELECT array_any(ARRAY[1, 2, 3], 'x == ''abc''');
+ERROR:  invalid input syntax for type integer: "abc"
+SELECT array_any(ARRAY[1, 2, 3], 'x % 0 = 0');
+ERROR:  execute_predicate: division by zero
+SELECT array_any(ARRAY[true, false], 'x == 1');
+ERROR:  array_any: incorrect datatype
+-- ТЕСТЫ array_none:
+-- КОРРЕКТНЫЕ
+SELECT array_none(ARRAY[1, 2, 3, 4], 'x == 1');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none(ARRAY[1, 1], 'x == 1');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none(ARRAY[2], 'x == 2');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none('{1, 2, 1, 3}'::integer[], 'x == 1');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none('{1, 2, 3, 4}'::integer[], 'x > 1');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none('{1, 2}'::integer[], 'x == 3');
+ array_none 
+------------
+ t
+(1 row)
+
+SELECT array_none('{Infinity}'::numeric[], 'x == ''Infinity''');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none('{-Infinity}'::real[], 'x == ''-Infinity''');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none('{NaN}'::double precision[], 'x == ''NaN''');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none('{-0.0}'::numeric[], 'x == 0.0');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none('{}'::integer[], 'x == 1');
+ array_none 
+------------
+ t
+(1 row)
+
+SELECT array_none(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+ array_none 
+------------
+ f
+(1 row)
+
+SELECT array_none(ARRAY[[1, 2], [3, 4]], 'x == 1');
+ array_none 
+------------
+ f
+(1 row)
+
+-- ДОЛЖНЫ ВЕРНУТЬ NULL
+SELECT array_none(NULL::integer[], 'x == 1');
+ array_none 
+------------
+ 
+(1 row)
+
+SELECT array_none(ARRAY[1, 2, 3], NULL::text);
+ array_none 
+------------
+ 
+(1 row)
+
+-- НЕКОРРЕКТНЫЕ
+SELECT array_none(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
+ERROR:  array_none: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+SELECT array_none(ARRAY['a', 'b']::text[], 'x > ''a''');
+ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+SELECT array_none(ARRAY[1, 2, 3], 'x @@@ 1');
+ERROR:  syntaxical_analize: Invalid first operator: 1
+SELECT array_none(ARRAY[1, 2, 3], 'x ==');
+ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+SELECT array_none(ARRAY[1, 2, 3], 'x == ''abc''');
+ERROR:  invalid input syntax for type integer: "abc"
+SELECT array_none(ARRAY[1, 2, 3], 'x % 0 = 0');
+ERROR:  execute_predicate: division by zero
+SELECT array_none(ARRAY[true, false], 'x == 1');
+ERROR:  array_none: incorrect datatype
