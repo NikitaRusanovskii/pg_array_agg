@@ -455,7 +455,7 @@ int32 prepare_predicate(Datum predicate_text, Oid target_oid, Predicate* predica
     if (datum_is_zero(predicate->const1, target_oid, collid))
                 ereport(ERROR,
                     (errcode(ERRCODE_DIVISION_BY_ZERO),
-                     errmsg("execute_predicate: division by zero")));
+                     errmsg("prepare_predicate: division by zero")));
 
     pfree(predicate_string);
     return predicate_len;
