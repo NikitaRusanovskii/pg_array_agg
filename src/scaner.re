@@ -7,8 +7,8 @@
 int scaner(char* predicate_string, int32 len, Token* result, int32 token_len) {
     int32 token_position = 0;
     char *YYCURSOR = predicate_string;
-    char *YYLIMIT = predicate_string + len;
-    char *YYTOKEN = YYCURSOR;
+    const char *YYLIMIT = predicate_string + len;
+    char *YYTOKEN;
     char *YYMARKER;
 
     memset(result, 0, token_len * sizeof(*result));

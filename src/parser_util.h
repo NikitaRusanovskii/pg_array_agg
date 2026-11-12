@@ -1,5 +1,6 @@
 #pragma once
 #include "postgres.h"
+#define TOKEN_SLICE_LEN 10
 
 typedef enum {
     CMP,
@@ -57,4 +58,21 @@ typedef struct {
     int32 lenght; // длина подстроки
 } Token;
 
+typedef struct {
+    Token value;
+    struct ASTNode *left, *right;
+} ASTNode;
+
+typedef struct{
+    Token slise[TOKEN_SLICE_LEN];
+    size_t token_pos;
+
+    ASTNode *result;    
+} ParserCtx;
+
+ASTNode *create_node(Token value, ASTNode *left, ASTNode *right);
+int free_ast(ASTNode* root);
+Token get_next(ParserCtx *ctx);
+Token get_prev(ParserCtx *ctx);
+Token get_curr(ParserCtx *ctx);
 Token construct_token(TokenType type, const char* token, int32 lenght);
