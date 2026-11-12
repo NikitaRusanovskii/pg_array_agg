@@ -26,7 +26,7 @@ SELECT array_product(sixtyfive_million_smallint) FROM huge_arr;
 
 -- Переполнение numeric
 SELECT array_product(array_fill(100000, ARRAY[10000000]));
-ERROR:  value overflows numeric format
+ERROR:  array_product: An error occurred during a numeric multiplication.
 -- Различные нижние границы массива
 SELECT array_product(array_fill(1, ARRAY[3], ARRAY[lb]))
 FROM (VALUES (0), (1), (9)) AS bounds(lb);
