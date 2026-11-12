@@ -1,160 +1,141 @@
--- ТЕСТЫ array_count:
+-- ТЕСТЫ array_count_if:
 -- КОРРЕКТНЫЕ
-SELECT array_count(ARRAY[1, 2, 3, 4], 1);
- array_count 
--------------
-           1
+SELECT array_count_if(ARRAY[1, 2, 3, 4], 'x == 1');
+ array_count_if 
+----------------
+              1
 (1 row)
 
-SELECT array_count(ARRAY[1, 1], 1);
- array_count 
--------------
-           2
+SELECT array_count_if(ARRAY[1, 1], 'x == 1');
+ array_count_if 
+----------------
+              2
 (1 row)
 
-SELECT array_count(ARRAY[2], 2);
- array_count 
--------------
-           1
+SELECT array_count_if(ARRAY[2], 'x == 2');
+ array_count_if 
+----------------
+              1
 (1 row)
 
-SELECT array_count('{}'::integer[], 1);
- array_count 
--------------
-           0
+SELECT array_count_if('{1, 2, 1, 3}'::integer[], 'x == 1');
+ array_count_if 
+----------------
+              2
 (1 row)
 
-SELECT array_count('{1, 2, 1, 3}'::integer[], 1);
- array_count 
--------------
-           2
+SELECT array_count_if('{1, 2, 3, 4}'::integer[], 'x > 1');
+ array_count_if 
+----------------
+              3
 (1 row)
 
-SELECT array_count('{1, 2, 1, 3}'::integer[], 3);
- array_count 
--------------
-           1
+SELECT array_count_if('{1, 2}'::integer[], 'x == 3');
+ array_count_if 
+----------------
+              0
 (1 row)
 
-SELECT array_count('{1, 2, 1, 3}'::integer[], 4);
- array_count 
--------------
-           0
+SELECT array_count_if('{Infinity}'::numeric[], 'x == ''Infinity''');
+ array_count_if 
+----------------
+              1
 (1 row)
 
-SELECT array_count('{1, NULL, 1, NULL}'::integer[], 1);
- array_count 
--------------
-           2
+SELECT array_count_if('{-Infinity}'::real[], 'x == ''-Infinity''');
+ array_count_if 
+----------------
+              1
 (1 row)
 
-SELECT array_count('{NULL, NULL}'::integer[], 1);
- array_count 
--------------
-           0
+SELECT array_count_if('{NaN}'::double precision[], 'x == ''NaN''');
+ array_count_if 
+----------------
+              1
 (1 row)
 
-SELECT array_count(ARRAY[0.0::real], -0.0::real);
- array_count 
--------------
-           1
+SELECT array_count_if('{-0.0}'::numeric[], 'x == 0.0');
+ array_count_if 
+----------------
+              1
 (1 row)
 
-SELECT array_count('{Infinity, Infinity}'::real[], 'Infinity'::real);
- array_count 
--------------
-           2
+SELECT array_count_if(ARRAY['a', 'b', 'a']::text[], 'x == "a"');
+ array_count_if 
+----------------
+              2
 (1 row)
 
-SELECT array_count('{-Infinity, -Infinity}'::real[], '-Infinity'::real);
- array_count 
--------------
-           2
+SELECT array_count_if('{}'::integer[], 'x == 1');
+ array_count_if 
+----------------
+              0
 (1 row)
 
-SELECT array_count('{NaN, NaN}'::real[], 'NaN'::real);
- array_count 
--------------
-           2
+SELECT array_count_if(ARRAY['hello', 'world', 'hello']::varchar[], 'x == "hello"');
+ array_count_if 
+----------------
+              2
 (1 row)
 
-SELECT array_count(ARRAY['a', 'b', 'a'], 'a');
- array_count 
--------------
-           2
+SELECT array_count_if(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'x == "hello"');
+ array_count_if 
+----------------
+              2
 (1 row)
 
-SELECT array_count(ARRAY['a', 'b', 'a'], 'b');
- array_count 
--------------
-           1
+SELECT array_count_if(ARRAY['cat', 'dog', 'cat']::char(5)[], 'x == "cat"');
+ array_count_if 
+----------------
+              2
 (1 row)
 
-SELECT array_count(ARRAY['a', 'b', 'a'], 'c');
- array_count 
--------------
-           0
+SELECT array_count_if(ARRAY['cat', 'dog', 'cat']::character(5)[], 'x == "cat"');
+ array_count_if 
+----------------
+              2
 (1 row)
 
-SELECT array_count(ARRAY['hello', 'world', 'hello']::varchar[], 'hello'::varchar);
- array_count 
--------------
-           2
+SELECT array_count_if(ARRAY['cat'::char(5), 'cat  '::char(5), 'dog'::char(5)], 'x == "cat"');
+ array_count_if 
+----------------
+              2
 (1 row)
 
-SELECT array_count(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'hello'::character varying(10));
- array_count 
--------------
-           2
-(1 row)
-
-SELECT array_count(ARRAY['cat', 'dog', 'cat']::char(5)[], 'cat'::char(5));
- array_count 
--------------
-           2
-(1 row)
-
-SELECT array_count(ARRAY['cat', 'dog', 'cat']::character(5)[], 'cat'::character(5));
- array_count 
--------------
-           2
-(1 row)
-
-SELECT array_count(ARRAY['cat'::char(5), 'cat  '::char(5), 'dog'::char(5)], 'cat'::char(5));
- array_count 
--------------
-           2
-(1 row)
-
-SELECT array_count(ARRAY[[1, 2], [3, 4]], 1);
- array_count 
--------------
-           1
+SELECT array_count_if(ARRAY[[1, 2], [3, 4]], 'x == 1');
+ array_count_if 
+----------------
+              1
 (1 row)
 
 -- ДОЛЖНЫ ВЕРНУТЬ NULL
-SELECT array_count(NULL::integer[], 1);
- array_count 
--------------
-            
+SELECT array_count_if(NULL::integer[], 'x == 1');
+ array_count_if 
+----------------
+               
 (1 row)
 
-SELECT array_count(ARRAY[1, 2, 3], NULL);
- array_count 
--------------
-            
+SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
+ array_count_if 
+----------------
+               
 (1 row)
 
 -- НЕКОРРЕКТНЫЕ
-SELECT array_count(ARRAY[[[1, 2]], [[3, 4]]], 1);
-ERROR:  array_count: Invalid ndim of array: 3
-SELECT array_count(ARRAY[1, 2, 3], '1'::text);
-ERROR:  function array_count(integer[], text) does not exist
-LINE 1: SELECT array_count(ARRAY[1, 2, 3], '1'::text);
-               ^
-HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
-SELECT array_count(ARRAY['a', 'b'], 1);
-ERROR:  function array_count(text[], integer) does not exist
-LINE 1: SELECT array_count(ARRAY['a', 'b'], 1);
-               ^
-HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+SELECT array_count_if(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
+ERROR:  array_count_if: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > ''a''');
+ERROR:  lexical_analyze: invalid token: '
+FATAL STRING: x > 'a'
+SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 1');
+ERROR:  lexical_analyze: invalid token: @
+FATAL STRING: x @@@ 1
+SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
+ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+SELECT array_count_if(ARRAY[1, 2, 3], 'x == ''abc''');
+ERROR:  lexical_analyze: invalid token: '
+FATAL STRING: x == 'abc'
+SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
+ERROR:  prepare_predicate: division by zero
+SELECT array_count_if(ARRAY[true, false], 'x == 1');
+ERROR:  array_count_if: incorrect datatype

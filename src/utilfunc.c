@@ -7,6 +7,8 @@
 #include "utils/numeric.h"
 #include "catalog/pg_type_d.h"
 #include "utilfunc.h"
+#include "parser_util.h"
+#include "scaner.h"
 
 
 bool type_is_expected(Oid type_oid, const Oid* expected_types, uint32 len) {
@@ -65,126 +67,8 @@ static Datum string_to_datum(const char* str, int len, Oid target_oid) {
     return res;
 }
 
-static Token construct_token(TokenType type, const char* token, int32 lenght) {
-    return (Token){type, token, lenght};
-}
-
-static int32 lexical_analyze(const char* predicate_string, int32 len, Token* result, int32 token_len) {
-    int32 token_position = 0;
-    int32 name_start = 0;
-
-    memset(result, 0, token_len * sizeof(*result));
-    for (int32 i = 0; i < len; i++) {
-        if (token_position >= token_len) {
-            ereport(ERROR,
-                (errcode(ERRCODE_SYNTAX_ERROR),
-                 errmsg("lexical_analyze: invalid predicate string")));
-        }
-        if (predicate_string[i] ==  ' ') continue;
-        else if (token_position == 0 && (isalpha((unsigned char)predicate_string[i]) ||
-                                        (unsigned char) predicate_string[i] == '_' ||
-                                        (i > name_start && isalnum((unsigned char)predicate_string[i])))) {
-
-            name_start = i;
-            
-            while (isalpha((unsigned char)predicate_string[i]) ||
-            (unsigned char) predicate_string[i] == '_' ||
-            (i > name_start && isalnum((unsigned char)predicate_string[i]))) i++;
-            result[token_position++] = construct_token(T_VARIABLE, &predicate_string[name_start], i - name_start);
-            i--;
-        }
-        else if (predicate_string[i] ==  '%') {
-            result[token_position++] = construct_token(T_MOD, &predicate_string[i], 1);
-        }
-        else if (i < (len - 1) && predicate_string[i] ==  '=' && predicate_string[i+1] == '=') {
-            result[token_position++] = construct_token(T_EQ, &predicate_string[i], 2);
-            i++;
-        }
-        else if (i < (len - 1) && predicate_string[i] ==  '!' && predicate_string[i+1] == '=') {
-            result[token_position++] = construct_token(T_NEQ, &predicate_string[i], 2);
-            i++;
-        }
-        else if (i < (len - 1) && predicate_string[i] ==  '<' && predicate_string[i+1] == '=') {
-            result[token_position++] = construct_token(T_LEE, &predicate_string[i], 2);
-            i++;
-        }
-        else if (i < (len - 1) && predicate_string[i] ==  '>' && predicate_string[i+1] == '=') {
-            result[token_position++] = construct_token(T_GRE, &predicate_string[i], 2);
-            i++;
-        }
-        else if (predicate_string[i] ==  '<') {
-            result[token_position++] = construct_token(T_LE, &predicate_string[i], 1);
-        }
-        else if (predicate_string[i] ==  '>') {
-            result[token_position++] = construct_token(T_GR, &predicate_string[i], 1);
-        }
-        else if (predicate_string[i] ==  '=') {
-            result[token_position++] = construct_token(T_SEQ, &predicate_string[i], 1);
-        }
-        else if (predicate_string[i] == '"') {
-            int32 start = i;
-            bool success = false;
-
-            i++;
-            while(i < len) {
-                if (predicate_string[i] == '"') {
-                    result[token_position++] = construct_token(T_STRING, &predicate_string[start+1], i - start - 1);
-                    success = true;
-                    i++;
-                    break;
-                }
-                i++;
-            }
-            if (!success)
-                ereport(ERROR,
-                    (errcode(ERRCODE_SYNTAX_ERROR),
-                     errmsg("lexical_analyze: invalid predicate string")));
-        }
-        else if (predicate_string[i] == '\'') {
-            // Для '+-Infinity', 'NaN', 
-            int32 start = i;
-            bool success = false;
-
-            i++;
-            while(i < len) {
-                if (predicate_string[i] == '\'') {
-                    result[token_position++] = construct_token(T_NUMBER, &predicate_string[start+1], i - start - 1);
-                    success = true;
-                    i++;
-                    break;
-                }
-                i++;
-            }
-            if (!success)
-                ereport(ERROR,
-                    (errcode(ERRCODE_SYNTAX_ERROR),
-                     errmsg("lexical_analyze: invalid predicate string")));
-        }
-        else {
-            int32 start = i;
-            int32 token_length;
-
-            while (i < len &&
-                   predicate_string[i] != '=' &&
-                   predicate_string[i] != '<' &&
-                   predicate_string[i] != '>' &&
-                   predicate_string[i] != '!' &&
-                   predicate_string[i] != '%' &&
-                   predicate_string[i] != ' ') i++;
-
-            token_length = i - start;
-
-            if (token_length == 0)
-                ereport(ERROR,
-                    (errcode(ERRCODE_SYNTAX_ERROR),
-                     errmsg("lexical_analyze: invalid token_lenght = 0")));
-
-            result[token_position++] = construct_token(T_NUMBER, &predicate_string[start], token_length);
-            i--;
-        }
-    }
-    result[token_position++] = construct_token(T_END, NULL, 0);
-    return token_position;
+static int32 lexical_analyze(char* predicate_string, int32 len, Token* result, int32 token_len) {
+    return scaner(predicate_string, len, result, token_len);
 }
 
 static int32 syntaxical_analize(Token* parsed_tokens, int32 len, ParsedPredicate* predicate) {

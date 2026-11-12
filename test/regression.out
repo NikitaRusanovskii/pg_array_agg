@@ -1,0 +1,93 @@
+# using postmaster on Unix socket, default port
+# diff -U3 /home/admin/pg_array_agg/test/expected/agg_allanynone.out /home/admin/pg_array_agg/test/results/agg_allanynone.out
+# --- /home/admin/pg_array_agg/test/expected/agg_allanynone.out	2026-11-08 17:52:26.749577270 +0300
+# +++ /home/admin/pg_array_agg/test/results/agg_allanynone.out	2026-11-12 05:22:42.603524614 +0300
+# @@ -119,15 +119,18 @@
+#  SELECT array_all(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
+#  ERROR:  array_all: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+#  SELECT array_all(ARRAY['a', 'b']::text[], 'x > ''a''');
+# -ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+# +ERROR:  lexical_analyze: invalid token: '
+# +FATAL STRING: x > 'a'
+#  SELECT array_all(ARRAY[1, 2, 3], 'x @@@ 1');
+# -ERROR:  syntaxical_analize: Invalid first operator: 1
+# +ERROR:  lexical_analyze: invalid token: @
+# +FATAL STRING: x @@@ 1
+#  SELECT array_all(ARRAY[1, 2, 3], 'x ==');
+#  ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+#  SELECT array_all(ARRAY[1, 2, 3], 'x == ''abc''');
+# -ERROR:  invalid input syntax for type integer: "abc"
+# +ERROR:  lexical_analyze: invalid token: '
+# +FATAL STRING: x == 'abc'
+#  SELECT array_all(ARRAY[1, 2, 3], 'x % 0 = 0');
+# -ERROR:  execute_predicate: division by zero
+# +ERROR:  prepare_predicate: division by zero
+#  SELECT array_all(ARRAY[true, false], 'x == 1');
+#  ERROR:  array_all: incorrect datatype
+#  -- ТЕСТЫ array_any:
+# @@ -251,15 +254,18 @@
+#  SELECT array_any(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
+#  ERROR:  array_any: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+#  SELECT array_any(ARRAY['a', 'b']::text[], 'x > ''a''');
+# -ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+# +ERROR:  lexical_analyze: invalid token: '
+# +FATAL STRING: x > 'a'
+#  SELECT array_any(ARRAY[1, 2, 3], 'x @@@ 1');
+# -ERROR:  syntaxical_analize: Invalid first operator: 1
+# +ERROR:  lexical_analyze: invalid token: @
+# +FATAL STRING: x @@@ 1
+#  SELECT array_any(ARRAY[1, 2, 3], 'x ==');
+#  ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+#  SELECT array_any(ARRAY[1, 2, 3], 'x == ''abc''');
+# -ERROR:  invalid input syntax for type integer: "abc"
+# +ERROR:  lexical_analyze: invalid token: '
+# +FATAL STRING: x == 'abc'
+#  SELECT array_any(ARRAY[1, 2, 3], 'x % 0 = 0');
+# -ERROR:  execute_predicate: division by zero
+# +ERROR:  prepare_predicate: division by zero
+#  SELECT array_any(ARRAY[true, false], 'x == 1');
+#  ERROR:  array_any: incorrect datatype
+#  -- ТЕСТЫ array_none:
+# @@ -383,14 +389,17 @@
+#  SELECT array_none(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
+#  ERROR:  array_none: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+#  SELECT array_none(ARRAY['a', 'b']::text[], 'x > ''a''');
+# -ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+# +ERROR:  lexical_analyze: invalid token: '
+# +FATAL STRING: x > 'a'
+#  SELECT array_none(ARRAY[1, 2, 3], 'x @@@ 1');
+# -ERROR:  syntaxical_analize: Invalid first operator: 1
+# +ERROR:  lexical_analyze: invalid token: @
+# +FATAL STRING: x @@@ 1
+#  SELECT array_none(ARRAY[1, 2, 3], 'x ==');
+#  ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+#  SELECT array_none(ARRAY[1, 2, 3], 'x == ''abc''');
+# -ERROR:  invalid input syntax for type integer: "abc"
+# +ERROR:  lexical_analyze: invalid token: '
+# +FATAL STRING: x == 'abc'
+#  SELECT array_none(ARRAY[1, 2, 3], 'x % 0 = 0');
+# -ERROR:  execute_predicate: division by zero
+# +ERROR:  prepare_predicate: division by zero
+#  SELECT array_none(ARRAY[true, false], 'x == 1');
+#  ERROR:  array_none: incorrect datatype
+not ok 1     - agg_allanynone                             40 ms
+ok 2         - agg_arith                               36104 ms
+# diff -U3 /home/admin/pg_array_agg/test/expected/agg_count_if.out /home/admin/pg_array_agg/test/results/agg_count_if.out
+# --- /home/admin/pg_array_agg/test/expected/agg_count_if.out	2026-11-08 17:52:26.751148470 +0300
+# +++ /home/admin/pg_array_agg/test/results/agg_count_if.out	2026-11-12 05:23:18.737127872 +0300
+# @@ -125,14 +125,17 @@
+#  SELECT array_count_if(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
+#  ERROR:  array_count_if: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+#  SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > ''a''');
+# -ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+# +ERROR:  lexical_analyze: invalid token: '
+# (diff output truncated and silencing output for further failing tests...)
+not ok 3     - agg_count_if                               17 ms
+ok 4         - agg_count                                  20 ms
+ok 5         - agg_minmax                                 17 ms
+# (diff output truncated and silencing output for further failing tests...)
+not ok 6     - agg_additional                         146369 ms
+1..6
+# 3 of 6 tests failed.
+# The differences that caused some tests to fail can be viewed in the file "/home/admin/pg_array_agg/test/regression.diffs".
+# A copy of the test summary that you see above is saved in the file "/home/admin/pg_array_agg/test/regression.out".
