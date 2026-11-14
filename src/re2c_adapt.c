@@ -4,10 +4,11 @@
 #include "re2c_adapt.h"
 
 int yylex(YYSTYPE *yylval_param, ParserCtx *ctx) {
+    Token t;
     if (yylval_param == NULL || ctx == NULL) {
         //erep
     }
-    Token t = get_next(ctx);
+    t = get_next(ctx);
     switch(t.type) {
         case T_VARIABLE:
             yylval_param->tok = t;
