@@ -1,7 +1,9 @@
 #include "postgres.h"
 #include "fmgr.h"
 #include "utils/elog.h"
+#if PG_VERSION_NUM >= 160000
 #include "varatt.h"
+#endif
 #include "predicate.h"
 #include "parser.tab.h"
 #include "scaner.h"
