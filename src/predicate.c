@@ -100,12 +100,19 @@ static Datum dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid) {
         case T_LEE:
             UNI_CMP_OP(<=);
         case T_MOD:
-            if (node->left == NULL || node->right == NULL) ereport(
+            if (node->left == NULL || node->right == NULL) { ereport(
                 ERROR,
                 errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-                errmsg("dfs_execute: bad ast")
-            );
+                errmsg("dfs_execute: bad ast"));
+                pg_unreachable();
+            }
             return mod_op(toid, left_res, right_res, collid);
+        default:
+            ereport(
+                ERROR,
+                errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+                errmsg("dfs_execute: bad ast"));
+                pg_unreachable();   
     }
     #undef UNI_CMP_OP(op)
 }

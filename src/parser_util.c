@@ -31,14 +31,16 @@ int free_ast(ASTNode *root) {
 
 Token get_next(ParserCtx *ctx) {
     Token res;
-    if(ctx == NULL) 
+    if(ctx == NULL) {
         ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
-        "get_next: ctx is NULL"
-    ));
-    if(ctx->token_pos >= ctx->token_len)
+        "get_next: ctx is NULL"));
+        pg_unreachable();
+    }   
+    if(ctx->token_pos >= ctx->token_len) {
         ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
-        "get_next: token_pos >= token_len"
-    ));
+        "get_next: token_pos >= token_len"));
+        pg_unreachable();
+    }
     res = ctx->tokens[ctx->token_pos++];
     return res;
 }

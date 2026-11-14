@@ -44,8 +44,7 @@ Numeric datum_to_numeric(Datum element, Oid type_oid) {
             ereport(ERROR,
                 (errcode(ERRCODE_WRONG_OBJECT_TYPE),
                  errmsg("datum_to_numeric: The function does not support this OID: %d", type_oid)));
-            tmp = int64_to_numeric(0);
-            break;
+            pg_unreachable();
     }
     return tmp;
 }
@@ -105,8 +104,7 @@ static bool datum_is_zero(Datum value, Oid type_oid, Oid collid) {
             ereport(ERROR,
                     (errcode(ERRCODE_DATATYPE_MISMATCH),
                      errmsg("datum_is_zero: incorrect datatype")));
-            zero = (Datum) 0;
-            break;
+            pg_unreachable();
     }
     res = cmp_op(type_oid, value, zero, collid) == 0;
     if (type_oid == NUMERICOID) pfree(DatumGetPointer(zero));
@@ -154,7 +152,7 @@ Datum mod_op(Oid target_oid, Datum first, Datum second, Oid collid) {
             ereport(ERROR,
                 (errcode(ERRCODE_WRONG_OBJECT_TYPE),
                 errmsg("mod_op: wrong oid: %d", target_oid)));
-            break;
+            pg_unreachable();
     }
     return result;
 }
