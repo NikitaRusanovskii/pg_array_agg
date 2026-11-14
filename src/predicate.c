@@ -74,8 +74,8 @@ static Datum dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid) {
             ); pg_unreachable(); } \
             return BoolGetDatum(cmp_op(toid, left_res, right_res, collid) op 0); } while(0)
 
-    Datum left_res;
-    Datum right_res;
+    Datum left_res = (Datum)0;
+    Datum right_res = (Datum)0;
     if (node->left) {
         left_res = dfs_execute(node->left, element, toid, collid);
     }
@@ -116,7 +116,7 @@ static Datum dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid) {
                 errmsg("dfs_execute: bad ast"));
                 pg_unreachable();   
     }
-    #undef UNI_CMP_OP(op)
+    #undef UNI_CMP_OP
 }
 
 bool execute_predicate(ParserCtx *ctx, Datum element, Oid target_oid, Oid collid) {

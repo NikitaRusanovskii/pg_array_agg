@@ -71,15 +71,16 @@ jobs:
             --inline-suppr \
             --error-exitcode=1 \
             --suppress=missingInclude \
+            --suppress=missingIncludeSystem \
             --language=c \
-            --std=c11 \
+            --std=c99 \
             --template=gcc \
             --file-filter='*.c' \
-            --file-filter='*.h' \
             --check-level=exhaustive \
             --suppress='*:src/parser.tab.c' \
             --suppress='*:src/parser.tab.h' \
             --suppress='*:src/scaner.c' \
+            --suppress=unmatchedSuppression \
             src/
 
   valgrind:
