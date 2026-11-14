@@ -14,8 +14,8 @@ ASTNode *create_node(Token value, ASTNode *left, ASTNode *right) {
     return n;
 }
 int free_ast(ASTNode *root) {
-    if (root == NULL) return 0;
     List *l = NULL;
+    if (root == NULL) return 0;
     l = lappend(l, root);
     while(l != NIL) {
         ASTNode *tmp = (ASTNode*)linitial(l);
@@ -30,6 +30,7 @@ int free_ast(ASTNode *root) {
 
 
 Token get_next(ParserCtx *ctx) {
+    Token res;
     if(ctx == NULL) 
         ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
         "get_next: ctx is NULL"
@@ -38,6 +39,6 @@ Token get_next(ParserCtx *ctx) {
         ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
         "get_next: token_pos >= token_len"
     ));
-    Token res = ctx->tokens[ctx->token_pos++];
+    res = ctx->tokens[ctx->token_pos++];
     return res;
 }
