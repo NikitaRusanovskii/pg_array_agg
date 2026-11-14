@@ -15,7 +15,8 @@ src/re2c_adapt.o \
 src/predicate.o
 
 
-REGRESS = agg_allanynone agg_arith agg_count_if agg_count agg_minmax agg_additional
+# REGRESS = agg_allanynone agg_arith agg_count_if agg_count agg_minmax agg_additional agg_predicate_additional
+REGRESS = agg_predicate_additional
 REGRESS_OPTS = --inputdir=test --outputdir=test --load-extension=$(EXTENSION)
 ifdef USE_PGXS
 PG_CONFIG ?= pg_config

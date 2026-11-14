@@ -1,0 +1,2 @@
+# using postmaster on Unix socket, default port
+# diff command failed with status 512: diff  "/home/admin/pg_array_agg/test/expected/agg_predicate_additional.out" "/home/admin/pg_array_agg/test/results/agg_predicate_additional.out" > "/home/admin/pg_array_agg/test/results/agg_predicate_additional.out.diff"Bail out!

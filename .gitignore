@@ -70,3 +70,4 @@ tmp_check/
 env/
 .deps/
 .vscode/
+fast_indent.sh

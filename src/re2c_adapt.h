@@ -3,5 +3,5 @@
 #include "parser.tab.h"
 #include "parser_util.h"
 
-int yylex(YYSTYPE *yylval_param, ParserCtx *ctx);
-void yyerror(ParserCtx *ctx, const char *message);
+int			yylex(YYSTYPE *yylval_param, ParserCtx *ctx);
+void		yyerror(ParserCtx *ctx, const char *message);
