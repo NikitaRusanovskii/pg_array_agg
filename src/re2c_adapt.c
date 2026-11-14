@@ -1,7 +1,7 @@
 #include "postgres.h"
 #include "parser.tab.h"
 #include "parser_util.h"
-
+#include "re2c_adapt.h"
 
 int yylex(YYSTYPE *yylval_param, ParserCtx *ctx) {
     if (yylval_param == NULL || ctx == NULL) {
@@ -54,4 +54,5 @@ void yyerror(ParserCtx *ctx, const char *message)
     ereport(ERROR,
             (errcode(ERRCODE_SYNTAX_ERROR),
              errmsg("predicate parser: %s", message)));
+    pg_unreachable();
 }

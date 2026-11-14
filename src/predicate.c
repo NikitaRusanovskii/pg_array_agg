@@ -53,24 +53,26 @@ ParserCtx *prepare_predicate(Datum predicate_text) {
         return 0;
     }
     yyparse_res = yyparse(ctx);
-    if(yyparse_res == 1) ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
-        "prepare_predicate: invalid syntax"
-    ));
-    if(yyparse_res == 2) ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
-        "prepare_predicate: memory allocate error"
-    ));
+    if(yyparse_res == 1) { ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
+        "prepare_predicate: invalid syntax"));
+        pg_unreachable();
+    }
+    if(yyparse_res == 2) { ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
+        "prepare_predicate: memory allocate error"));
+        pg_unreachable();
+    }
     /* dfs_print(ctx->result); */
     return ctx;
 }
 
 static Datum dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid) {
 
-#define UNI_CMP_OP(op) if (node->left == NULL || node->right == NULL) ereport( \
+#define UNI_CMP_OP(op) do { if (node->left == NULL || node->right == NULL) { ereport( \
                 ERROR, \
                 errcode(ERRCODE_INVALID_PARAMETER_VALUE), \
                 errmsg("dfs_execute: bad ast") \
-            ); \
-            return BoolGetDatum(cmp_op(toid, left_res, right_res, collid) op 0)
+            ); pg_unreachable(); } \
+            return BoolGetDatum(cmp_op(toid, left_res, right_res, collid) op 0); } while(0)
 
     Datum left_res;
     Datum right_res;
@@ -122,21 +124,25 @@ bool execute_predicate(ParserCtx *ctx, Datum element, Oid target_oid, Oid collid
         ereport(ERROR,
             errcode(ERRCODE_INVALID_PARAMETER_VALUE),
             errmsg("execute_predicate: ctx == NULL"));
+        pg_unreachable();
     }
     if (ctx->predicate_string == NULL) {
         ereport(ERROR,
             errcode(ERRCODE_INVALID_PARAMETER_VALUE),
             errmsg("execute_predicate: predicate_string == NULL"));
+        pg_unreachable();
     }
     if (ctx->result == NULL) {
         ereport(ERROR,
             errcode(ERRCODE_INVALID_PARAMETER_VALUE),
             errmsg("execute_predicate: AST == NULL"));
+        pg_unreachable();
     }
     if (ctx->tokens == NULL) {
         ereport(ERROR,
             errcode(ERRCODE_INVALID_PARAMETER_VALUE),
             errmsg("execute_predicate: tokens == NULL"));
+        pg_unreachable();
     }
     return DatumGetBool(dfs_execute(ctx->result, element, target_oid, collid));
 }

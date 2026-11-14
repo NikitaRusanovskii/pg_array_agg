@@ -93,6 +93,7 @@ int scaner(char* predicate_string, int32 len, Token* result, int32 token_len) {
                  errmsg("scaner: invalid token: %.*s\nFATAL STRING: %.*s",
                         (int)(YYCURSOR - YYTOKEN), YYTOKEN,
                         len, predicate_string)));
+                pg_unreachable();
             }
         */
     }

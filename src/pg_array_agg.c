@@ -53,23 +53,20 @@ Datum array_product(PG_FUNCTION_ARGS) {
     bool err = false;
     #endif
 
-    if (PG_NARGS() == 0) PG_RETURN_NULL();
-    if (PG_NARGS() > 1) ereport(ERROR,
-        (errcode(ERRCODE_TOO_MANY_ARGUMENTS),
-         errmsg("array_product: Too many arguments: %d, functions need: %d", PG_NARGS(), 1)));
-
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
     if (ARR_NDIM(arr) > 2) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_product: Invalid ndim of array: %d", ARR_NDIM(arr))));
+            pg_unreachable();
     }
 
     if (!type_is_expected(arr->elemtype, expected_types, 6)) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_product: Invalid elemtype of array. OID: %d", arr->elemtype)));
+        pg_unreachable();
     }
 
     arr_it = array_create_iterator(arr, 0, NULL);
@@ -123,24 +120,20 @@ Datum array_sum(PG_FUNCTION_ARGS) {
     bool err = false;
     #endif
     
-
-    if (PG_NARGS() == 0) PG_RETURN_NULL();
-    if (PG_NARGS() > 1) ereport(ERROR,
-        (errcode(ERRCODE_TOO_MANY_ARGUMENTS),
-         errmsg("array_sum: Too many arguments: %d, functions need: %d", PG_NARGS(), 1)));
-
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
     if (ARR_NDIM(arr) > 2) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_sum: Invalid ndim of array: %d", ARR_NDIM(arr))));
+            pg_unreachable();
     }
 
     if (!type_is_expected(arr->elemtype, expected_types, 6)) {
         ereport(ERROR,
             (errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
              errmsg("array_sum: Invalid elemtype of array. OID: %d", arr->elemtype)));
+                pg_unreachable();
     }
 
     arr_it = array_create_iterator(arr, 0, NULL);
@@ -198,12 +191,6 @@ Datum array_avg(PG_FUNCTION_ARGS) {
     bool err = false;
     #endif
     
-
-    if (PG_NARGS() == 0) PG_RETURN_NULL();
-    if (PG_NARGS() > 1) ereport(ERROR,
-        (errcode(ERRCODE_TOO_MANY_ARGUMENTS),
-         errmsg("array_avg: Too many arguments: %d, functions need: %d", PG_NARGS(), 1)));
-
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
     if (ARR_NDIM(arr) > 2) {
@@ -289,11 +276,6 @@ Datum array_min(PG_FUNCTION_ARGS) {
     bool is_null = false;
     bool is_first = true;
 
-    if (PG_NARGS() == 0) PG_RETURN_NULL();
-    if (PG_NARGS() > 1) ereport(ERROR,
-        (errcode(ERRCODE_TOO_MANY_ARGUMENTS),
-         errmsg("array_min: Too many arguments: %d, functions need: %d", PG_NARGS(), 1)));
-
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
     if (ARR_NDIM(arr) > 2) {
@@ -350,11 +332,6 @@ Datum array_max(PG_FUNCTION_ARGS) {
     bool is_null = false;
     bool is_first = true;
 
-    if (PG_NARGS() == 0) PG_RETURN_NULL();
-    if (PG_NARGS() > 1) ereport(ERROR,
-        (errcode(ERRCODE_TOO_MANY_ARGUMENTS),
-         errmsg("array_max: Too many arguments: %d, functions need: %d", PG_NARGS(), 1)));
-
     arr = PG_GETARG_ARRAYTYPE_P(0);
 
     if (ARR_NDIM(arr) > 2) {
@@ -408,11 +385,6 @@ Datum array_count(PG_FUNCTION_ARGS) {
     Datum elem;
     uint64_t result = 0;
     bool is_null = false;
-
-    if (PG_NARGS() < 2 ) PG_RETURN_NULL();
-    if (PG_NARGS() > 2) ereport(ERROR,
-        (errcode(ERRCODE_TOO_MANY_ARGUMENTS),
-         errmsg("array_count: Too many arguments: %d, functions need: %d", PG_NARGS(), 2)));
 
     arr = PG_GETARG_ARRAYTYPE_P(0);
     element = PG_GETARG_DATUM(1);
