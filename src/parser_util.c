@@ -17,7 +17,7 @@ int free_ast(ASTNode *root) {
     if (root == NULL) return 0;
     List *l = NULL;
     l = lappend(l, root);
-    while(list_length(l) > 0) {
+    while(l != NIL) {
         ASTNode *tmp = (ASTNode*)linitial(l);
         l = list_delete_first(l);
         if(tmp->left) l = lappend(l, tmp->left);
@@ -30,23 +30,14 @@ int free_ast(ASTNode *root) {
 
 
 Token get_next(ParserCtx *ctx) {
-    if(ctx == NULL); //erep
-    if(ctx->token_pos >= TOKEN_SLICE_LEN - 1); // erep потом нужно избавиться от макроса
-    Token res = ctx->slise[ctx->token_pos];
-    return res;
-}
-
-Token get_prev(ParserCtx *ctx) {
-    if(ctx == NULL); //erep
-    if (0 >= ctx->token_pos); // erep
-    ctx->token_pos--;
-    Token res = ctx->slise[ctx->token_pos];
-    return res;
-}
-
-Token get_curr(ParserCtx *ctx) {
-    if(ctx == NULL); //erep
-    if (0 > ctx->token_pos || TOKEN_SLICE_LEN <= ctx->token_pos); // erep
-    Token res = ctx->slise[ctx->token_pos];
+    if(ctx == NULL) 
+        ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
+        "get_next: ctx is NULL"
+    ));
+    if(ctx->token_pos >= ctx->token_len)
+        ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
+        "get_next: token_pos >= token_len"
+    ));
+    Token res = ctx->tokens[ctx->token_pos++];
     return res;
 }

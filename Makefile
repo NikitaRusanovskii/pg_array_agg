@@ -6,7 +6,14 @@ DATA = pg_array_agg--1.0.sql
 
 MODULE_big = pg_array_agg
 
-OBJS = src/pg_array_agg.o src/utilfunc.o src/scaner.o src/parser_util.o
+OBJS = src/pg_array_agg.o \
+src/utilfunc.o \
+src/scaner.o \
+src/parser_util.o \
+src/parser.tab.o \
+src/re2c_adapt.o \
+src/predicate.o
+
 
 REGRESS = agg_allanynone agg_arith agg_count_if agg_count agg_minmax agg_additional
 REGRESS_OPTS = --inputdir=test --outputdir=test --load-extension=$(EXTENSION)

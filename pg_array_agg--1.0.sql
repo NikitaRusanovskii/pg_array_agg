@@ -1,4 +1,5 @@
 \echo Use "CREATE EXTENSION pg_array_agg" to load this file \quit
+
 CREATE FUNCTION array_product(arr anyarray)
 RETURNS numeric
 AS 'MODULE_PATHNAME', 'array_product'

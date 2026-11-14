@@ -6,6 +6,7 @@
 #include "utils/numeric.h"
 #include "catalog/pg_type_d.h"
 #include "utilfunc.h"
+#include "predicate.h"
 
 
 PG_MODULE_MAGIC;
@@ -451,12 +452,11 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     Oid collation = PG_GET_COLLATION();
     Oid elemtype;
     Datum predicate;
-    Predicate compiled_predicate;
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
     uint64_t result;
-    int pred_len;
+    ParserCtx *predicate_ctx;
     Oid const expected_types[] = PRED_ALLOWED_TYPES;
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
@@ -477,8 +477,8 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     result = 0;
     iterator = array_create_iterator(arr, 0, NULL);
 
-    pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
-    if (pred_len == 0) {
+    predicate_ctx = prepare_predicate(predicate);
+    if (predicate_ctx == NULL) {
         PG_FREE_IF_COPY(arr, 0);
         PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
         array_free_iterator(iterator);
@@ -490,7 +490,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
             continue;
         }
 
-        if (execute_predicate(&compiled_predicate, current_element,elemtype, collation)) result++;
+        if (execute_predicate(predicate_ctx, current_element,elemtype, collation)) result++;
         if (result > INT32_MAX) ereport(ERROR, 
                                         errcode(ERRCODE_ARRAY_ELEMENT_ERROR),
                                         errmsg("Too many elements in array"));
@@ -499,7 +499,7 @@ Datum array_count_if(PG_FUNCTION_ARGS) {
     PG_FREE_IF_COPY(arr, 0);
     PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
-    free_predicate(&compiled_predicate);
+    free_predicate(predicate_ctx);
     PG_RETURN_INT32((int32)result);
 }
 
@@ -509,11 +509,10 @@ Datum array_any(PG_FUNCTION_ARGS) {
     Oid collation = PG_GET_COLLATION();
     Oid elemtype;
     Datum predicate;
-    Predicate compiled_predicate;
+    ParserCtx *predicate_ctx;
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
-    int pred_len;
     Oid const expected_types[] = PRED_ALLOWED_TYPES;
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL();
@@ -533,8 +532,8 @@ Datum array_any(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
-    pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
-    if (pred_len == 0) {
+    predicate_ctx = prepare_predicate(predicate);
+    if (predicate_ctx == NULL) {
         PG_FREE_IF_COPY(arr, 0);
         PG_FREE_IF_COPY(DatumGetPointer(predicate), 1); 
         array_free_iterator(iterator);
@@ -545,11 +544,11 @@ Datum array_any(PG_FUNCTION_ARGS) {
             continue;
         }
 
-        if (execute_predicate(&compiled_predicate, current_element,elemtype, collation)) {
+        if (execute_predicate(predicate_ctx, current_element,elemtype, collation)) {
             PG_FREE_IF_COPY(arr, 0);
             PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
             array_free_iterator(iterator);
-            free_predicate(&compiled_predicate);
+            free_predicate(predicate_ctx);
             PG_RETURN_BOOL(true);
         }
     }
@@ -557,7 +556,7 @@ Datum array_any(PG_FUNCTION_ARGS) {
     PG_FREE_IF_COPY(arr, 0);
     PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
-    free_predicate(&compiled_predicate);
+    free_predicate(predicate_ctx);
     PG_RETURN_BOOL(false);
 }
 
@@ -566,11 +565,10 @@ Datum array_all(PG_FUNCTION_ARGS) {
     Oid collation = PG_GET_COLLATION();
     Oid elemtype;
     Datum predicate;
-    Predicate compiled_predicate;
+    ParserCtx *predicate_ctx;
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
-    int pred_len;
     int arr_len;
     Oid const expected_types[] = PRED_ALLOWED_TYPES;
 
@@ -592,8 +590,8 @@ Datum array_all(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
-    pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
-    if (pred_len == 0) {
+    predicate_ctx = prepare_predicate(predicate);
+    if (predicate_ctx == NULL) {
         PG_FREE_IF_COPY(arr, 0);
         PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
         array_free_iterator(iterator);
@@ -605,11 +603,11 @@ Datum array_all(PG_FUNCTION_ARGS) {
             continue;
         }
 
-        if (!execute_predicate(&compiled_predicate, current_element,elemtype, collation)){
+        if (!execute_predicate(predicate_ctx, current_element,elemtype, collation)){
             PG_FREE_IF_COPY(arr, 0);
             PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
             array_free_iterator(iterator);
-            free_predicate(&compiled_predicate);
+            free_predicate(predicate_ctx);
             PG_RETURN_BOOL(false);
         }
     }
@@ -617,7 +615,7 @@ Datum array_all(PG_FUNCTION_ARGS) {
     PG_FREE_IF_COPY(arr, 0);
     PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
-    free_predicate(&compiled_predicate);
+    free_predicate(predicate_ctx);
     PG_RETURN_BOOL(true);
 }
 
@@ -626,11 +624,10 @@ Datum array_none(PG_FUNCTION_ARGS) {
     Oid collation = PG_GET_COLLATION();
     Oid elemtype;
     Datum predicate;
-    Predicate compiled_predicate;
+    ParserCtx *predicate_ctx;
     Datum current_element;
     ArrayIterator iterator;
     bool is_null;
-    int pred_len;
     Oid const expected_types[] = PRED_ALLOWED_TYPES;
 
     if (PG_ARGISNULL(0) || PG_ARGISNULL(1)) PG_RETURN_NULL(); // функция STRIСT, этого никогда не произойдёт
@@ -650,8 +647,8 @@ Datum array_none(PG_FUNCTION_ARGS) {
     elemtype = arr->elemtype;
     iterator = array_create_iterator(arr, 0, NULL);
 
-    pred_len = prepare_predicate(predicate, elemtype, &compiled_predicate, collation);
-    if (pred_len == 0) {
+    predicate_ctx = prepare_predicate(predicate);
+    if (predicate_ctx == NULL) {
         PG_FREE_IF_COPY(arr, 0);
         PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
         array_free_iterator(iterator);
@@ -663,11 +660,11 @@ Datum array_none(PG_FUNCTION_ARGS) {
             continue;
         }
 
-        if (execute_predicate(&compiled_predicate, current_element, elemtype, collation)){
+        if (execute_predicate(predicate_ctx, current_element, elemtype, collation)){
             PG_FREE_IF_COPY(arr, 0);
             PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
             array_free_iterator(iterator);
-            free_predicate(&compiled_predicate);
+            free_predicate(predicate_ctx);
             PG_RETURN_BOOL(false);
         }
     }
@@ -675,6 +672,6 @@ Datum array_none(PG_FUNCTION_ARGS) {
     PG_FREE_IF_COPY(arr, 0);
     PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
     array_free_iterator(iterator);
-    free_predicate(&compiled_predicate);
+    free_predicate(predicate_ctx);
     PG_RETURN_BOOL(true);
 }

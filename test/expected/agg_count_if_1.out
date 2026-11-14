@@ -125,17 +125,17 @@ SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
 SELECT array_count_if(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 ERROR:  array_count_if: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
 SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > ''a''');
-ERROR:  lexical_analyze: invalid token: '
+ERROR:  scaner: invalid token: '
 FATAL STRING: x > 'a'
 SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 1');
-ERROR:  lexical_analyze: invalid token: @
+ERROR:  scaner: invalid token: @
 FATAL STRING: x @@@ 1
 SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
-ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY[1, 2, 3], 'x == ''abc''');
-ERROR:  lexical_analyze: invalid token: '
+ERROR:  scaner: invalid token: '
 FATAL STRING: x == 'abc'
 SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
-ERROR:  prepare_predicate: division by zero
+ERROR:  process: division by zero
 SELECT array_count_if(ARRAY[true, false], 'x == 1');
 ERROR:  array_count_if: incorrect datatype

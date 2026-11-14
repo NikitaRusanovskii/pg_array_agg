@@ -26,7 +26,7 @@ SELECT array_product(sixtyfive_million_smallint) FROM huge_arr;
 
 -- Переполнение numeric
 SELECT array_product(array_fill(100000, ARRAY[10000000]));
-ERROR:  array_product: An error occurred during a numeric multiplication.
+ERROR:  value overflows numeric format
 -- Различные нижние границы массива
 SELECT array_product(array_fill(1, ARRAY[3], ARRAY[lb]))
 FROM (VALUES (0), (1), (9)) AS bounds(lb);
@@ -199,7 +199,7 @@ SELECT array_count_if(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_count_if(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
-ERROR:  lexical_analyze: invalid token: +
+ERROR:  scaner: invalid token: +
 FATAL STRING: H % 5 + 1 - 3 = 7
 -- array_all
 -- Массив из 1 млн элементов
@@ -237,7 +237,7 @@ SELECT array_all(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_all(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
-ERROR:  lexical_analyze: invalid token: +
+ERROR:  scaner: invalid token: +
 FATAL STRING: H % 5 + 1 - 3 = 7
 -- array_any
 -- Массив из 1 млн элементов
@@ -275,7 +275,7 @@ SELECT array_any(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_any(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
-ERROR:  lexical_analyze: invalid token: +
+ERROR:  scaner: invalid token: +
 FATAL STRING: H % 5 + 1 - 3 = 7
 -- array_none
 -- Массив из 1 млн элементов
@@ -313,7 +313,7 @@ SELECT array_none(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_none(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
-ERROR:  lexical_analyze: invalid token: +
+ERROR:  scaner: invalid token: +
 FATAL STRING: H % 5 + 1 - 3 = 7
 -- Ошибка парсинга имени в предикате (исправлена. Ранее обрезался 1 символ сразу после последнего символа имени переменной)
 SELECT array_all(ARRAY[1, 2, 3, 4, 5], "x<=5"); -- ожидаемый результат: t
@@ -589,41 +589,45 @@ SELECT array_none(ARRAY[1, 2, 3], 'x >= 1');
 (1 row)
 
 SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
-ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY[1, 2, 3], 'x 2');
-ERROR:  syntaxical_analize: Invalid token array format. Array len: 3
+ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 2');
-ERROR:  lexical_analyze: invalid token: @
+ERROR:  scaner: invalid token: @
 FATAL STRING: x @@@ 2
 SELECT array_count_if(ARRAY[1, 2, 3], 'x == 1 == 2');
-ERROR:  syntaxical_analize: Invalid token array len: 6
+ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY[1, 2, 3], '2 == x');
-ERROR:  syntaxical_analize: Invalid token array. First token is not variable
+ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY['a', 'b']::text[], 'x == "a');
-ERROR:  lexical_analyze: invalid token: "
+ERROR:  scaner: invalid token: "
 FATAL STRING: x == "a
 SELECT array_count_if(
     ARRAY['a', 'b', 'c']::text[],
     'x > "a"'
 );
-ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 2
+ array_count_if 
+----------------
+              2
+(1 row)
+
 SELECT array_count_if(
     ARRAY[1.0, 2.0, 3.0]::real[],
     'x % 2 = 0'
 );
-ERROR:  cast_predicate: Invalid operator. Type: FLOAT4, operator: 6
+ERROR:  mod_op: wrong oid: 700
 SELECT array_count_if(
     ARRAY[1.0, 2.0, 3.0]::double precision[],
     'x % 2 = 0'
 );
-ERROR:  cast_predicate: Invalid operator. Type: FLOAT8, operator: 6
+ERROR:  mod_op: wrong oid: 701
 SELECT array_count_if(
     ARRAY['a', 'b']::text[],
     'x % 2 = 0'
 );
-ERROR:  cast_predicate: Invalid operator. Type: TEXT, operator: 6
+ERROR:  datum_is_zero: incorrect datatype
 SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
-ERROR:  prepare_predicate: division by zero
+ERROR:  process: division by zero
 SELECT array_count_if(ARRAY[]::int[], 'x > 0');
  array_count_if 
 ----------------

@@ -11,7 +11,7 @@ int scaner(char* predicate_string, int32 len, Token* result, int32 token_len) {
     char *YYTOKEN;
     char *YYMARKER;
 
-    memset(result, 0, token_len * sizeof(*result));
+    memset(result, 0, token_len * sizeof(Token));
     for(;;) {
         YYTOKEN = YYCURSOR;
         /*!re2c
@@ -90,7 +90,7 @@ int scaner(char* predicate_string, int32 len, Token* result, int32 token_len) {
             * {
                 ereport(ERROR,
                 (errcode(ERRCODE_SYNTAX_ERROR),
-                 errmsg("lexical_analyze: invalid token: %.*s\nFATAL STRING: %.*s",
+                 errmsg("scaner: invalid token: %.*s\nFATAL STRING: %.*s",
                         (int)(YYCURSOR - YYTOKEN), YYTOKEN,
                         len, predicate_string)));
             }
