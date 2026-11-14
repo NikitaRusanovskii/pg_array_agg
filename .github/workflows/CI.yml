@@ -77,6 +77,9 @@ jobs:
             --file-filter='*.c' \
             --file-filter='*.h' \
             --check-level=exhaustive \
+            --suppress='*:src/parser.tab.c' \
+            --suppress='*:src/parser.tab.h' \
+            --suppress='*:src/scaner.c' \
             src/
 
   valgrind:
