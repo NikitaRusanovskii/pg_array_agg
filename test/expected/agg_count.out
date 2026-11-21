@@ -79,21 +79,53 @@ SELECT array_count('{NaN, NaN}'::real[], 'NaN'::real);
 (1 row)
 
 SELECT array_count(ARRAY['a', 'b', 'a'], 'a');
-ERROR:  array_count: Invalid elemtype of array. OID: 25
+ array_count 
+-------------
+           2
+(1 row)
+
 SELECT array_count(ARRAY['a', 'b', 'a'], 'b');
-ERROR:  array_count: Invalid elemtype of array. OID: 25
+ array_count 
+-------------
+           1
+(1 row)
+
 SELECT array_count(ARRAY['a', 'b', 'a'], 'c');
-ERROR:  array_count: Invalid elemtype of array. OID: 25
+ array_count 
+-------------
+           0
+(1 row)
+
 SELECT array_count(ARRAY['hello', 'world', 'hello']::varchar[], 'hello'::varchar);
-ERROR:  array_count: Invalid elemtype of array. OID: 1043
+ array_count 
+-------------
+           2
+(1 row)
+
 SELECT array_count(ARRAY['hello', 'world', 'hello']::character varying(10)[], 'hello'::character varying(10));
-ERROR:  array_count: Invalid elemtype of array. OID: 1043
+ array_count 
+-------------
+           2
+(1 row)
+
 SELECT array_count(ARRAY['cat', 'dog', 'cat']::char(5)[], 'cat'::char(5));
-ERROR:  array_count: Invalid elemtype of array. OID: 1042
+ array_count 
+-------------
+           2
+(1 row)
+
 SELECT array_count(ARRAY['cat', 'dog', 'cat']::character(5)[], 'cat'::character(5));
-ERROR:  array_count: Invalid elemtype of array. OID: 1042
+ array_count 
+-------------
+           2
+(1 row)
+
 SELECT array_count(ARRAY['cat'::char(5), 'cat  '::char(5), 'dog'::char(5)], 'cat'::char(5));
-ERROR:  array_count: Invalid elemtype of array. OID: 1042
+ array_count 
+-------------
+           2
+(1 row)
+
 SELECT array_count(ARRAY[[1, 2], [3, 4]], 1);
  array_count 
 -------------
