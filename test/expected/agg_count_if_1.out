@@ -123,7 +123,7 @@ SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
 
 -- НЕКОРРЕКТНЫЕ
 SELECT array_count_if(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
-ERROR:  array_count_if: searching elements in manydimensional [when ndim > 2] arrays is not supported yet
+ERROR:  array_count_if: Invalid ndim of array: 3
 SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > ''a''');
 ERROR:  scaner: invalid token: '
 FATAL STRING: x > 'a'
@@ -138,4 +138,4 @@ FATAL STRING: x == 'abc'
 SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
 ERROR:  process: division by zero
 SELECT array_count_if(ARRAY[true, false], 'x == 1');
-ERROR:  array_count_if: incorrect datatype
+ERROR:  array_count_if: Invalid elemtype of array. OID: 16

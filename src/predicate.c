@@ -1,6 +1,7 @@
 #include "postgres.h"
 #include "fmgr.h"
 #include "utils/elog.h"
+#include "utils/memutils.h"
 #if PG_VERSION_NUM >= 160000
 #include "varatt.h"
 #endif
@@ -74,6 +75,11 @@ prepare_predicate(Datum predicate_text)
 																		"prepare_predicate: memory allocate error"));
 		pg_unreachable();
 	}
+	ctx->execution_ctx = AllocSetContextCreate(
+											   CurrentMemoryContext,
+											   "ExecutionMemoryContext",
+											   ALLOCSET_DEFAULT_SIZES
+		);
 	/* dfs_print(ctx->result); */
 	return ctx;
 }
@@ -143,6 +149,9 @@ dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid)
 bool
 execute_predicate(ParserCtx *ctx, Datum element, Oid target_oid, Oid collid)
 {
+	bool		result;
+	MemoryContext old_ctx;
+
 	if (ctx == NULL)
 	{
 		ereport(ERROR,
@@ -171,7 +180,11 @@ execute_predicate(ParserCtx *ctx, Datum element, Oid target_oid, Oid collid)
 				errmsg("execute_predicate: tokens == NULL"));
 		pg_unreachable();
 	}
-	return DatumGetBool(dfs_execute(ctx->result, element, target_oid, collid));
+	old_ctx = MemoryContextSwitchTo(ctx->execution_ctx);
+	result = DatumGetBool(dfs_execute(ctx->result, element, target_oid, collid));
+	MemoryContextSwitchTo(old_ctx);
+	MemoryContextReset(ctx->execution_ctx);
+	return result;
 }
 void
 free_predicate(ParserCtx *ctx)
@@ -179,5 +192,6 @@ free_predicate(ParserCtx *ctx)
 	pfree(ctx->tokens);
 	pfree(ctx->predicate_string);
 	free_ast(ctx->result);
+	MemoryContextDelete(ctx->execution_ctx);
 	pfree(ctx);
 }

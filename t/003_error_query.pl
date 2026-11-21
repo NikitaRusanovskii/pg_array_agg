@@ -1,4 +1,3 @@
-
 use strict;
 use warnings FATAL => 'all';
 
@@ -112,7 +111,7 @@ check_error(
             'x > 0'
         );
     },
-    qr/more than two dimensions|multidimensional|dimension/i,
+    qr/Invalid ndim of array: 3/i,
     'array_count_if rejects ndim=3'
 );
 check_error(
@@ -122,7 +121,7 @@ check_error(
             'x < 10'
         );
     },
-    qr/more than two dimensions|multidimensional|dimension/i,
+    qr/Invalid ndim of array: 3/i,
     'array_all rejects ndim=3'
 );
 
@@ -133,7 +132,7 @@ check_error(
             'x == 3'
         );
     },
-    qr/more than two dimensions|multidimensional|dimension/i,
+    qr/Invalid ndim of array: 3/i,
     'array_any rejects ndim=3'
 );
 
@@ -144,7 +143,7 @@ check_error(
             'x == 7'
         );
     },
-    qr/more than two dimensions|multidimensional|dimension/i,
+    qr/Invalid ndim of array: 3/i,
     'array_none rejects ndim=3'
 );
 

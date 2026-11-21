@@ -13,7 +13,7 @@ psql bench_db -c "CREATE TABLE IF NOT EXISTS bench_table AS\
 "
 
 psql bench_db -c "CREATE EXTENSION IF NOT EXISTS pg_array_agg"
-#psql bench_db -c "\dx"
+# psql bench_db -c "\dx"
 
 pgbench -n -D n="$ARRAY_LEN" -c "$CLIENTS" -j "$(nproc)" -t "$TRANSACTIONS" -r -f ~/pg_array_agg/bench/bench.sql bench_db
 # -c это клиенты

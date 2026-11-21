@@ -43,13 +43,14 @@ typedef struct ASTNode
 			   *right;
 } ASTNode;
 
-typedef struct ParseCtx
+typedef struct ParserCtx
 {
 	Token	   *tokens;
 	size_t		token_len;
 	size_t		token_pos;
 	char	   *predicate_string;
 	ASTNode    *result;
+	MemoryContext execution_ctx;
 } ParserCtx;
 
 ParserCtx  *prepare_predicate(Datum predicate_text);

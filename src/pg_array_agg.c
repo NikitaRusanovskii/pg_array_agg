@@ -40,11 +40,30 @@ PG_FUNCTION_INFO_V1(array_none);
 #define PRED_ALLOWED_TYPES {INT2OID, INT4OID, INT8OID, NUMERICOID,\
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID}
 
+static void func_arg_check(const char *func_name, size_t ndim, Oid elemtype, const Oid *expected_types, size_t arr_len)
+{
+	if (ndim > 2)
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+				 errmsg("%s: Invalid ndim of array: %ld", func_name, ndim)));
+		pg_unreachable();
+	}
+
+	if (!type_is_expected(elemtype, expected_types, arr_len))
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
+				 errmsg("%s: Invalid elemtype of array. OID: %d", func_name, elemtype)));
+		pg_unreachable();
+	}
+}
+
 Datum
 array_product(PG_FUNCTION_ARGS)
 {
 	ArrayType  *arr;
-	Oid const	expected_types[] = {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID};
+	Oid const	expected_types[] = ARITHM_ALLOWED_TYPES;
 	ArrayIterator arr_it;
 	Datum		elem;
 	bool		is_null = false;
@@ -57,21 +76,7 @@ array_product(PG_FUNCTION_ARGS)
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	if (ARR_NDIM(arr) > 2)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_product: Invalid ndim of array: %d", ARR_NDIM(arr))));
-		pg_unreachable();
-	}
-
-	if (!type_is_expected(arr->elemtype, expected_types, 6))
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_product: Invalid elemtype of array. OID: %d", arr->elemtype)));
-		pg_unreachable();
-	}
+	func_arg_check("array_product", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
 
 	arr_it = array_create_iterator(arr, 0, NULL);
 
@@ -131,21 +136,7 @@ array_sum(PG_FUNCTION_ARGS)
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	if (ARR_NDIM(arr) > 2)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_sum: Invalid ndim of array: %d", ARR_NDIM(arr))));
-		pg_unreachable();
-	}
-
-	if (!type_is_expected(arr->elemtype, expected_types, 6))
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_sum: Invalid elemtype of array. OID: %d", arr->elemtype)));
-		pg_unreachable();
-	}
+	func_arg_check("array_sum", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
 
 	arr_it = array_create_iterator(arr, 0, NULL);
 
@@ -209,19 +200,7 @@ array_avg(PG_FUNCTION_ARGS)
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	if (ARR_NDIM(arr) > 2)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_avg: Invalid ndim of array: %d", ARR_NDIM(arr))));
-	}
-
-	if (!type_is_expected(arr->elemtype, expected_types, 6))
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_avg: Invalid elemtype of array. OID: %d", arr->elemtype)));
-	}
+	func_arg_check("array_avg", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
 
 	if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0)
 	{
@@ -303,19 +282,7 @@ array_min(PG_FUNCTION_ARGS)
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	if (ARR_NDIM(arr) > 2)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_min: Invalid ndim of array: %d", ARR_NDIM(arr))));
-	}
-
-	if (!type_is_expected(arr->elemtype, expected_types, 6))
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_min: Invalid elemtype of array. OID: %d", arr->elemtype)));
-	}
+	func_arg_check("array_min", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
 
 	if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0)
 	{
@@ -375,19 +342,7 @@ array_max(PG_FUNCTION_ARGS)
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	if (ARR_NDIM(arr) > 2)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_max: Invalid ndim of array: %d", ARR_NDIM(arr))));
-	}
-
-	if (!type_is_expected(arr->elemtype, expected_types, 6))
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_max: Invalid elemtype of array. OID: %d", arr->elemtype)));
-	}
+	func_arg_check("array_max", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
 
 	if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0)
 	{
@@ -447,19 +402,7 @@ array_count(PG_FUNCTION_ARGS)
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 	element = PG_GETARG_DATUM(1);
 
-	if (ARR_NDIM(arr) > 2)
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_count: Invalid ndim of array: %d", ARR_NDIM(arr))));
-	}
-
-	if (!type_is_expected(arr->elemtype, expected_types, 9))
-	{
-		ereport(ERROR,
-				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
-				 errmsg("array_count: Invalid elemtype of array. OID: %d", arr->elemtype)));
-	}
+	func_arg_check("array_count", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
 
 	arr_it = array_create_iterator(arr, 0, NULL);
 	while (array_iterate(arr_it, &elem, &is_null))
@@ -489,7 +432,7 @@ array_count_if(PG_FUNCTION_ARGS)
 	ArrayType  *arr;
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
-	Datum		predicate;
+	Datum predicate;
 	Datum		current_element;
 	ArrayIterator iterator;
 	bool		is_null;
@@ -501,17 +444,10 @@ array_count_if(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	if (ARR_NDIM(arr) > 2)
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("array_count_if: searching elements in manydimensional [when ndim > 2] arrays is not supported yet")));
-
-	if (!type_is_expected(arr->elemtype, expected_types, 9))
-		ereport(ERROR,
-				(errcode(ERRCODE_DATATYPE_MISMATCH),
-				 errmsg("array_count_if: incorrect datatype")));
+	func_arg_check("array_count_if", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
 
 	predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
+
 	elemtype = arr->elemtype;
 	result = 0;
 	iterator = array_create_iterator(arr, 0, NULL);
@@ -554,7 +490,7 @@ array_any(PG_FUNCTION_ARGS)
 	ArrayType  *arr;
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
-	Datum		predicate;
+	Datum predicate;
 	ParserCtx  *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;
@@ -565,17 +501,10 @@ array_any(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	if (ARR_NDIM(arr) > 2)
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("array_any: searching elements in manydimensional [when ndim > 2] arrays is not supported yet")));
-
-	if (!type_is_expected(arr->elemtype, expected_types, 9))
-		ereport(ERROR,
-				(errcode(ERRCODE_DATATYPE_MISMATCH),
-				 errmsg("array_any: incorrect datatype")));
+	func_arg_check("array_any", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
 
 	predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
+
 	elemtype = arr->elemtype;
 	iterator = array_create_iterator(arr, 0, NULL);
 
@@ -617,7 +546,7 @@ array_all(PG_FUNCTION_ARGS)
 	ArrayType  *arr;
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
-	Datum		predicate;
+	Datum predicate;
 	ParserCtx  *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;
@@ -630,17 +559,10 @@ array_all(PG_FUNCTION_ARGS)
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 	arr_len = ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr));
 
-	if (ARR_NDIM(arr) > 2)
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("array_all: searching elements in manydimensional [when ndim > 2] arrays is not supported yet")));
-
-	if (!type_is_expected(arr->elemtype, expected_types, 9))
-		ereport(ERROR,
-				(errcode(ERRCODE_DATATYPE_MISMATCH),
-				 errmsg("array_all: incorrect datatype")));
+	func_arg_check("array_all", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
 
 	predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
+
 	elemtype = arr->elemtype;
 	iterator = array_create_iterator(arr, 0, NULL);
 
@@ -684,7 +606,7 @@ array_none(PG_FUNCTION_ARGS)
 	ArrayType  *arr;
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
-	Datum		predicate;
+	Datum predicate;
 	ParserCtx  *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;
@@ -695,17 +617,10 @@ array_none(PG_FUNCTION_ARGS)
 		PG_RETURN_NULL();
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	if (ARR_NDIM(arr) > 2)
-		ereport(ERROR,
-				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-				 errmsg("array_none: searching elements in manydimensional [when ndim > 2] arrays is not supported yet")));
-
-	if (!type_is_expected(arr->elemtype, expected_types, 9))
-		ereport(ERROR,
-				(errcode(ERRCODE_DATATYPE_MISMATCH),
-				 errmsg("array_none: incorrect datatype")));
+	func_arg_check("array_none", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
 
 	predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
+
 	elemtype = arr->elemtype;
 	iterator = array_create_iterator(arr, 0, NULL);
 

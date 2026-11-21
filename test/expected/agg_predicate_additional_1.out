@@ -1,0 +1,136 @@
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], '_x > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], '1x > 2');
+ERROR:  predicate parser: syntax error
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], '_ > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], '123 > 2');
+ERROR:  predicate parser: syntax error
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'abc > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], '_123 > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], '_abc > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'abc123 > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], '_abc123 > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x % 2 < 1');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x % 2 > 0');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x % 2 <= 1');
+ array_count_if 
+----------------
+              5
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x % 2 >= 0');
+ array_count_if 
+----------------
+              5
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x % 2 = 0');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x % 2 == 0');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x % 2 != 0');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1, 2, 3, 4, 5], 'x > 2');
+ array_count_if 
+----------------
+              3
+(1 row)
+
+SELECT array_count_if(ARRAY[1.0, 2.0, 3.0, 4.0], 'x > 2.5');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1.1, 2.2, 3.3, 4.4]::numeric[], 'x > 2.2');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_count_if(ARRAY[1.1, 2.2, 3.3, 4.4]::numeric[], 'x % 2 > 0.5');
+ array_count_if 
+----------------
+              2
+(1 row)
+
+SELECT array_any(ARRAY[1, 2, 3, 4, 5], 'x % 2 == 0');
+ array_any 
+-----------
+ t
+(1 row)
+
+SELECT array_all(ARRAY[1, 2, 3, 4, 5], 'x % 2 >= 0');
+ array_all 
+-----------
+ t
+(1 row)
+
+SELECT array_none(ARRAY[1, 2, 3, 4, 5], 'x % 2 > 2');
+ array_none 
+------------
+ t
+(1 row)
+
