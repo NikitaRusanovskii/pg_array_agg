@@ -1,5 +1,6 @@
 #include "postgres.h"
 #include "nodes/pg_list.h"
+#include "utils/lsyscache.h"
 #include "parser_util.h"
 
 Token

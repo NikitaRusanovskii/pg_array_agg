@@ -1,27 +1,27 @@
 # using postmaster on Unix socket, default port
-ok 1         - agg_allanynone                             67 ms
-ok 2         - agg_arith                               65398 ms
+ok 1         - agg_allanynone                             66 ms
+# diff -U3 /home/admin/pg_array_agg/test/expected/agg_arith.out /home/admin/pg_array_agg/test/results/agg_arith.out
+# --- /home/admin/pg_array_agg/test/expected/agg_arith.out	2026-11-23 09:19:25.115297933 +0300
+# +++ /home/admin/pg_array_agg/test/results/agg_arith.out	2026-11-23 10:20:35.537452941 +0300
+# @@ -306,12 +306,7 @@
+#   2.5000000000000000
+#  (1 row)
+#  
+# -SELECT array_avg(ARRAY(SELECT generate_series(1, 65000000))::Integer[]);
+# -       array_avg       
+# ------------------------
+# - 32500000.500000000000
+# -(1 row)
+# -
+# +-- SELECT array_avg(ARRAY(SELECT generate_series(1, 65000000))::Integer[]);
+#  -- ДОЛЖНЫ ВЕРНУТЬ NULL
+#  SELECT array_avg('{}'::integer[]);
+#   array_avg 
+not ok 2     - agg_arith                                  39 ms
 ok 3         - agg_count_if                               34 ms
-# diff -U3 /home/admin/pg_array_agg/test/expected/agg_count_1.out /home/admin/pg_array_agg/test/results/agg_count.out
-# --- /home/admin/pg_array_agg/test/expected/agg_count_1.out	2026-11-21 10:46:44.223376623 +0300
-# +++ /home/admin/pg_array_agg/test/results/agg_count.out	2026-11-21 11:06:27.304069552 +0300
-# @@ -152,9 +152,11 @@
-#  ERROR:  function array_count(integer[], text) does not exist
-#  LINE 1: SELECT array_count(ARRAY[1, 2, 3], '1'::text);
-#                 ^
-# -HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
-# +DETAIL:  No function of that name accepts the given argument types.
-# +HINT:  You might need to add explicit type casts.
-#  SELECT array_count(ARRAY['a', 'b'], 1);
-#  ERROR:  function array_count(text[], integer) does not exist
-#  LINE 1: SELECT array_count(ARRAY['a', 'b'], 1);
-#                 ^
-# -HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
-# +DETAIL:  No function of that name accepts the given argument types.
-# +HINT:  You might need to add explicit type casts.
-not ok 4     - agg_count                                  34 ms
-ok 5         - agg_minmax                                 31 ms
-ok 6         - agg_additional                         377739 ms
+ok 4         - agg_count                                  32 ms
+ok 5         - agg_minmax                                 33 ms
+ok 6         - agg_additional                         281335 ms
 ok 7         - agg_predicate_additional                   31 ms
 1..7
 # 1 of 7 tests failed.

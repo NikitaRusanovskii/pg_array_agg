@@ -40,6 +40,9 @@ prepare_predicate(Datum predicate_text)
 	predicate_len = VARSIZE_ANY_EXHDR(t);
 	ctx->predicate_string = palloc0(predicate_len + 1);
 	memcpy(ctx->predicate_string, VARDATA_ANY(t), predicate_len);
+	if ((Pointer) t != DatumGetPointer(predicate_text))
+		pfree(t);				/* по сути, развёрнутый
+								 * PG_FREE_IF_COPY */
 	ctx->tokens = palloc0(sizeof(Token) * (predicate_len + 2));
 	if (predicate_len == 0)
 	{
@@ -80,12 +83,18 @@ prepare_predicate(Datum predicate_text)
 											   "ExecutionMemoryContext",
 											   ALLOCSET_DEFAULT_SIZES
 		);
+
+	ctx->cache = AllocSetContextCreate(
+									   CurrentMemoryContext,
+									   "CacheMemoryContext",
+									   ALLOCSET_DEFAULT_SIZES
+		);
 	/* dfs_print(ctx->result); */
 	return ctx;
 }
 
 static Datum
-dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid)
+dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid, MemoryContext cache_ctx)
 {
 
 #define UNI_CMP_OP(op) do { if (node->left == NULL || node->right == NULL) { ereport( \
@@ -97,14 +106,15 @@ dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid)
 
 	Datum		left_res = (Datum) 0;
 	Datum		right_res = (Datum) 0;
+	MemoryContext old_ctx;
 
 	if (node->left)
 	{
-		left_res = dfs_execute(node->left, element, toid, collid);
+		left_res = dfs_execute(node->left, element, toid, collid, cache_ctx);
 	}
 	if (node->right)
 	{
-		right_res = dfs_execute(node->right, element, toid, collid);
+		right_res = dfs_execute(node->right, element, toid, collid, cache_ctx);
 	}
 	switch (node->value.type)
 	{
@@ -112,7 +122,16 @@ dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid)
 			return element;
 		case T_NUMBER:
 		case T_STRING:
-			return string_to_datum(node->value.token, node->value.lenght, toid);
+			if (node->is_cached)
+				return node->raw;
+			else
+			{
+				old_ctx = MemoryContextSwitchTo(cache_ctx);
+				node->raw = string_to_datum(node->value.token, node->value.lenght, toid);
+				MemoryContextSwitchTo(old_ctx);
+				node->is_cached = true;
+				return node->raw;
+			}
 		case T_EQ:
 		case T_SEQ:
 			UNI_CMP_OP(==);
@@ -181,7 +200,7 @@ execute_predicate(ParserCtx *ctx, Datum element, Oid target_oid, Oid collid)
 		pg_unreachable();
 	}
 	old_ctx = MemoryContextSwitchTo(ctx->execution_ctx);
-	result = DatumGetBool(dfs_execute(ctx->result, element, target_oid, collid));
+	result = DatumGetBool(dfs_execute(ctx->result, element, target_oid, collid, ctx->cache));
 	MemoryContextSwitchTo(old_ctx);
 	MemoryContextReset(ctx->execution_ctx);
 	return result;
@@ -193,5 +212,6 @@ free_predicate(ParserCtx *ctx)
 	pfree(ctx->predicate_string);
 	free_ast(ctx->result);
 	MemoryContextDelete(ctx->execution_ctx);
+	MemoryContextDelete(ctx->cache);
 	pfree(ctx);
 }

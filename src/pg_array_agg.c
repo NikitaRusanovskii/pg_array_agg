@@ -40,7 +40,8 @@ PG_FUNCTION_INFO_V1(array_none);
 #define PRED_ALLOWED_TYPES {INT2OID, INT4OID, INT8OID, NUMERICOID,\
                             FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID}
 
-static void func_arg_check(const char *func_name, size_t ndim, Oid elemtype, const Oid *expected_types, size_t arr_len)
+static void
+func_arg_check(const char *func_name, size_t ndim, Oid elemtype, const Oid *expected_types, size_t arr_len)
 {
 	if (ndim > 2)
 	{
@@ -432,7 +433,7 @@ array_count_if(PG_FUNCTION_ARGS)
 	ArrayType  *arr;
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
-	Datum predicate;
+	Datum		predicate;
 	Datum		current_element;
 	ArrayIterator iterator;
 	bool		is_null;
@@ -490,7 +491,7 @@ array_any(PG_FUNCTION_ARGS)
 	ArrayType  *arr;
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
-	Datum predicate;
+	Datum		predicate;
 	ParserCtx  *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;
@@ -546,7 +547,7 @@ array_all(PG_FUNCTION_ARGS)
 	ArrayType  *arr;
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
-	Datum predicate;
+	Datum		predicate;
 	ParserCtx  *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;
@@ -606,7 +607,7 @@ array_none(PG_FUNCTION_ARGS)
 	ArrayType  *arr;
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
-	Datum predicate;
+	Datum		predicate;
 	ParserCtx  *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;

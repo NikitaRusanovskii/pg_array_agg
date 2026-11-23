@@ -71,5 +71,6 @@ env/
 .deps/
 .vscode/
 fast_indent.sh
-
+# кластеры
 agg-cluster/
+cluster_master/

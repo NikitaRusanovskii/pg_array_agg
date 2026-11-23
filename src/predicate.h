@@ -41,6 +41,8 @@ typedef struct ASTNode
 	Token		value;
 	struct ASTNode *left,
 			   *right;
+	Datum		raw;
+	bool		is_cached;
 } ASTNode;
 
 typedef struct ParserCtx
@@ -51,6 +53,7 @@ typedef struct ParserCtx
 	char	   *predicate_string;
 	ASTNode    *result;
 	MemoryContext execution_ctx;
+	MemoryContext cache;
 } ParserCtx;
 
 ParserCtx  *prepare_predicate(Datum predicate_text);
