@@ -26,11 +26,11 @@ typedef enum
 	T_MOD, //%
 	T_SEQ, //=(short equal)
 	T_END
-}			PGAA_TokentType;
+}			PGAA_TokenType;
 
 typedef struct PGAA_Token
 {
-	PGAA_TokentType type;
+	PGAA_TokenType type;
 	const char *token;
 	int32		length;
 }			PGAA_Token;

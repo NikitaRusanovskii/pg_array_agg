@@ -4,7 +4,7 @@
 #include "parser_util.h"
 
 PGAA_Token
-pgaa_construct_token(PGAA_TokentType type, const char *token, int32 length)
+pgaa_construct_token(PGAA_TokenType type, const char *token, int32 length)
 {
 	return (PGAA_Token)
 	{
