@@ -199,7 +199,7 @@ SELECT array_count_if(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_count_if(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
-ERROR:  scaner: invalid token: +
+ERROR:  pgaa_scaner: invalid token: +
 FATAL STRING: H % 5 + 1 - 3 = 7
 -- array_all
 -- Массив из 1 млн элементов
@@ -237,7 +237,7 @@ SELECT array_all(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_all(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
-ERROR:  scaner: invalid token: +
+ERROR:  pgaa_scaner: invalid token: +
 FATAL STRING: H % 5 + 1 - 3 = 7
 -- array_any
 -- Массив из 1 млн элементов
@@ -275,7 +275,7 @@ SELECT array_any(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_any(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
-ERROR:  scaner: invalid token: +
+ERROR:  pgaa_scaner: invalid token: +
 FATAL STRING: H % 5 + 1 - 3 = 7
 -- array_none
 -- Массив из 1 млн элементов
@@ -313,7 +313,7 @@ SELECT array_none(ARRAY[1, 2, 3], '');
 
 -- Ошибка парсинга
 SELECT array_none(ARRAY[1, 2, 3], 'H % 5 + 1 - 3 = 7');
-ERROR:  scaner: invalid token: +
+ERROR:  pgaa_scaner: invalid token: +
 FATAL STRING: H % 5 + 1 - 3 = 7
 -- Ошибка парсинга имени в предикате (исправлена. Ранее обрезался 1 символ сразу после последнего символа имени переменной)
 SELECT array_all(ARRAY[1, 2, 3, 4, 5], "x<=5"); -- ожидаемый результат: t
@@ -593,14 +593,14 @@ ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY[1, 2, 3], 'x 2');
 ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 2');
-ERROR:  scaner: invalid token: @
+ERROR:  pgaa_scaner: invalid token: @
 FATAL STRING: x @@@ 2
 SELECT array_count_if(ARRAY[1, 2, 3], 'x == 1 == 2');
 ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY[1, 2, 3], '2 == x');
 ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY['a', 'b']::text[], 'x == "a');
-ERROR:  scaner: invalid token: "
+ERROR:  pgaa_scaner: invalid token: "
 FATAL STRING: x == "a
 SELECT array_count_if(
     ARRAY['a', 'b', 'c']::text[],
@@ -615,17 +615,17 @@ SELECT array_count_if(
     ARRAY[1.0, 2.0, 3.0]::real[],
     'x % 2 = 0'
 );
-ERROR:  mod_op: wrong oid: 700
+ERROR:  pgaa_mod_op: wrong oid: 700
 SELECT array_count_if(
     ARRAY[1.0, 2.0, 3.0]::double precision[],
     'x % 2 = 0'
 );
-ERROR:  mod_op: wrong oid: 701
+ERROR:  pgaa_mod_op: wrong oid: 701
 SELECT array_count_if(
     ARRAY['a', 'b']::text[],
     'x % 2 = 0'
 );
-ERROR:  datum_is_zero: incorrect datatype
+ERROR:  pgaa_datum_is_zero: incorrect datatype
 SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
 ERROR:  process: division by zero
 SELECT array_count_if(ARRAY[]::int[], 'x > 0');

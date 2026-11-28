@@ -63,8 +63,14 @@
 /* Pull parsers.  */
 #define YYPULL 1
 
-
-
+/* Substitute the type names.  */
+#define YYSTYPE         PGAA_YYSTYPE
+/* Substitute the variable and function names.  */
+#define yyparse         pgaa_yyparse
+#define yylex           pgaa_yylex
+#define yyerror         pgaa_yyerror
+#define yydebug         pgaa_yydebug
+#define yynerrs         pgaa_yynerrs
 
 /* First part of user prologue.  */
 #line 5 "src/parser.y"
@@ -73,10 +79,10 @@
     #include "parser_util.h"
     #include "utilfunc.h"
     #include "re2c_adapt.h"
-    int yylex(YYSTYPE *yylval_param, ParserCtx *ctx);
-    void yyerror(ParserCtx *ctx, const char *s);
+    int pgaa_yylex(YYSTYPE *yylval_param, PGAA_ParserCtx *ctx);
+    void pgaa_yyerror(PGAA_ParserCtx *ctx, const char *s);
 
-#line 80 "src/parser.tab.c"
+#line 86 "src/parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -389,7 +395,7 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
-         || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+         || (defined PGAA_YYSTYPE_IS_TRIVIAL && PGAA_YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
@@ -505,19 +511,19 @@ static const yytype_int8 yytranslate[] =
        5,     6,     7,     8,     9,    10,    11,    12,    13
 };
 
-#if YYDEBUG
+#if PGAA_YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    46,    46,    51,    59,    60,    61,    62,    63,    64,
-      65,    68,    72,    75
+       0,    47,    47,    52,    60,    61,    62,    63,    64,    65,
+      66,    69,    73,    76
 };
 #endif
 
 /** Accessing symbol of state STATE.  */
 #define YY_ACCESSING_SYMBOL(State) YY_CAST (yysymbol_kind_t, yystos[State])
 
-#if YYDEBUG || 0
+#if PGAA_YYDEBUG || 0
 /* The user-facing name of the symbol whose (internal) number is
    YYSYMBOL.  No bounds checking.  */
 static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
@@ -620,7 +626,7 @@ static const yytype_int8 yyr2[] =
 enum { YYENOMEM = -2 };
 
 #define yyerrok         (yyerrstatus = 0)
-#define yyclearin       (yychar = YYEMPTY)
+#define yyclearin       (yychar = PGAA_YYEMPTY)
 
 #define YYACCEPT        goto yyacceptlab
 #define YYABORT         goto yyabortlab
@@ -632,7 +638,7 @@ enum { YYENOMEM = -2 };
 
 #define YYBACKUP(Token, Value)                                    \
   do                                                              \
-    if (yychar == YYEMPTY)                                        \
+    if (yychar == PGAA_YYEMPTY)                                        \
       {                                                           \
         yychar = (Token);                                         \
         yylval = (Value);                                         \
@@ -648,12 +654,12 @@ enum { YYENOMEM = -2 };
   while (0)
 
 /* Backward compatibility with an undocumented macro.
-   Use YYerror or YYUNDEF. */
-#define YYERRCODE YYUNDEF
+   Use PGAA_YYerror or PGAA_YYUNDEF. */
+#define YYERRCODE PGAA_YYUNDEF
 
 
 /* Enable debugging if requested.  */
-#if YYDEBUG
+#if PGAA_YYDEBUG
 
 # ifndef YYFPRINTF
 #  include <stdio.h> /* INFRINGES ON USER NAME SPACE */
@@ -687,7 +693,7 @@ do {                                                                      \
 
 static void
 yy_symbol_value_print (FILE *yyo,
-                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, ParserCtx *ctx)
+                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, PGAA_ParserCtx *ctx)
 {
   FILE *yyoutput = yyo;
   YY_USE (yyoutput);
@@ -706,7 +712,7 @@ yy_symbol_value_print (FILE *yyo,
 
 static void
 yy_symbol_print (FILE *yyo,
-                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, ParserCtx *ctx)
+                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep, PGAA_ParserCtx *ctx)
 {
   YYFPRINTF (yyo, "%s %s (",
              yykind < YYNTOKENS ? "token" : "nterm", yysymbol_name (yykind));
@@ -745,7 +751,7 @@ do {                                                            \
 
 static void
 yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
-                 int yyrule, ParserCtx *ctx)
+                 int yyrule, PGAA_ParserCtx *ctx)
 {
   int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
@@ -772,12 +778,12 @@ do {                                    \
 /* Nonzero means print parse trace.  It is left uninitialized so that
    multiple parsers can coexist.  */
 int yydebug;
-#else /* !YYDEBUG */
+#else /* !PGAA_YYDEBUG */
 # define YYDPRINTF(Args) ((void) 0)
 # define YY_SYMBOL_PRINT(Title, Kind, Value, Location)
 # define YY_STACK_PRINT(Bottom, Top)
 # define YY_REDUCE_PRINT(Rule)
-#endif /* !YYDEBUG */
+#endif /* !PGAA_YYDEBUG */
 
 
 /* YYINITDEPTH -- initial size of the parser's stacks.  */
@@ -807,7 +813,7 @@ int yydebug;
 
 static void
 yydestruct (const char *yymsg,
-            yysymbol_kind_t yykind, YYSTYPE *yyvaluep, ParserCtx *ctx)
+            yysymbol_kind_t yykind, YYSTYPE *yyvaluep, PGAA_ParserCtx *ctx)
 {
   YY_USE (yyvaluep);
   YY_USE (ctx);
@@ -830,7 +836,7 @@ yydestruct (const char *yymsg,
 `----------*/
 
 int
-yyparse (ParserCtx *ctx)
+yyparse (PGAA_ParserCtx *ctx)
 {
 /* Lookahead token kind.  */
 int yychar;
@@ -884,7 +890,7 @@ YYSTYPE yylval YY_INITIAL_VALUE (= yyval_default);
 
   YYDPRINTF ((stderr, "Starting parse\n"));
 
-  yychar = YYEMPTY; /* Cause a token to be read.  */
+  yychar = PGAA_YYEMPTY; /* Cause a token to be read.  */
 
   goto yysetstate;
 
@@ -994,25 +1000,25 @@ yybackup:
   /* Not known => get a lookahead token if don't already have one.  */
 
   /* YYCHAR is either empty, or end-of-input, or a valid lookahead.  */
-  if (yychar == YYEMPTY)
+  if (yychar == PGAA_YYEMPTY)
     {
       YYDPRINTF ((stderr, "Reading a token\n"));
       yychar = yylex (&yylval, ctx);
     }
 
-  if (yychar <= YYEOF)
+  if (yychar <= PGAA_YYEOF)
     {
-      yychar = YYEOF;
+      yychar = PGAA_YYEOF;
       yytoken = YYSYMBOL_YYEOF;
       YYDPRINTF ((stderr, "Now at end of input.\n"));
     }
-  else if (yychar == YYerror)
+  else if (yychar == PGAA_YYerror)
     {
       /* The scanner already issued an error message, process directly
          to error recovery.  But do not keep the error token as
          lookahead, it is too special and may lead us to an endless
          loop in error recovery. */
-      yychar = YYUNDEF;
+      yychar = PGAA_YYUNDEF;
       yytoken = YYSYMBOL_YYerror;
       goto yyerrlab1;
     }
@@ -1049,7 +1055,7 @@ yybackup:
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 
   /* Discard the shifted token.  */
-  yychar = YYEMPTY;
+  yychar = PGAA_YYEMPTY;
   goto yynewstate;
 
 
@@ -1085,92 +1091,92 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* predicate: VARIABLE cmp_op operand  */
-#line 46 "src/parser.y"
+#line 47 "src/parser.y"
                             {
-        ASTNode *var = create_node((yyvsp[-2].tok), NULL, NULL);
-        (yyval.node) = create_node((yyvsp[-1].tok), var, (yyvsp[0].node));
+        PGAA_ASTNode *var = pgaa_create_node((yyvsp[-2].tok), NULL, NULL);
+        (yyval.node) = pgaa_create_node((yyvsp[-1].tok), var, (yyvsp[0].node));
         ctx->result = (yyval.node);
     }
-#line 1095 "src/parser.tab.c"
+#line 1101 "src/parser.tab.c"
     break;
 
   case 3: /* predicate: VARIABLE mod_op operand cmp_op operand  */
-#line 51 "src/parser.y"
+#line 52 "src/parser.y"
                                              {
-        ASTNode *var = create_node((yyvsp[-4].tok), NULL, NULL);
-        ASTNode *op1 = create_node((yyvsp[-3].tok), var, (yyvsp[-2].node));
-        (yyval.node) = create_node((yyvsp[-1].tok), op1, (yyvsp[0].node));
+        PGAA_ASTNode *var = pgaa_create_node((yyvsp[-4].tok), NULL, NULL);
+        PGAA_ASTNode *op1 = pgaa_create_node((yyvsp[-3].tok), var, (yyvsp[-2].node));
+        (yyval.node) = pgaa_create_node((yyvsp[-1].tok), op1, (yyvsp[0].node));
         ctx->result = (yyval.node);
     }
-#line 1106 "src/parser.tab.c"
-    break;
-
-  case 4: /* cmp_op: EQ  */
-#line 59 "src/parser.y"
-       { (yyval.tok) = (yyvsp[0].tok); }
 #line 1112 "src/parser.tab.c"
     break;
 
-  case 5: /* cmp_op: NEQ  */
+  case 4: /* cmp_op: EQ  */
 #line 60 "src/parser.y"
-          { (yyval.tok) = (yyvsp[0].tok); }
+       { (yyval.tok) = (yyvsp[0].tok); }
 #line 1118 "src/parser.tab.c"
     break;
 
-  case 6: /* cmp_op: SEQ  */
+  case 5: /* cmp_op: NEQ  */
 #line 61 "src/parser.y"
           { (yyval.tok) = (yyvsp[0].tok); }
 #line 1124 "src/parser.tab.c"
     break;
 
-  case 7: /* cmp_op: GR  */
+  case 6: /* cmp_op: SEQ  */
 #line 62 "src/parser.y"
-         { (yyval.tok) = (yyvsp[0].tok); }
+          { (yyval.tok) = (yyvsp[0].tok); }
 #line 1130 "src/parser.tab.c"
     break;
 
-  case 8: /* cmp_op: GRE  */
+  case 7: /* cmp_op: GR  */
 #line 63 "src/parser.y"
-          { (yyval.tok) = (yyvsp[0].tok); }
+         { (yyval.tok) = (yyvsp[0].tok); }
 #line 1136 "src/parser.tab.c"
     break;
 
-  case 9: /* cmp_op: LE  */
+  case 8: /* cmp_op: GRE  */
 #line 64 "src/parser.y"
-         { (yyval.tok) = (yyvsp[0].tok); }
+          { (yyval.tok) = (yyvsp[0].tok); }
 #line 1142 "src/parser.tab.c"
     break;
 
-  case 10: /* cmp_op: LEE  */
+  case 9: /* cmp_op: LE  */
 #line 65 "src/parser.y"
-          { (yyval.tok) = (yyvsp[0].tok); }
+         { (yyval.tok) = (yyvsp[0].tok); }
 #line 1148 "src/parser.tab.c"
     break;
 
-  case 11: /* mod_op: MOD  */
-#line 68 "src/parser.y"
-        { (yyval.tok) = (yyvsp[0].tok); }
+  case 10: /* cmp_op: LEE  */
+#line 66 "src/parser.y"
+          { (yyval.tok) = (yyvsp[0].tok); }
 #line 1154 "src/parser.tab.c"
     break;
 
+  case 11: /* mod_op: MOD  */
+#line 69 "src/parser.y"
+        { (yyval.tok) = (yyvsp[0].tok); }
+#line 1160 "src/parser.tab.c"
+    break;
+
   case 12: /* operand: NUMBER  */
-#line 72 "src/parser.y"
+#line 73 "src/parser.y"
            {
-        (yyval.node) = create_node((yyvsp[0].tok), NULL, NULL);
+        (yyval.node) = pgaa_create_node((yyvsp[0].tok), NULL, NULL);
     }
-#line 1162 "src/parser.tab.c"
+#line 1168 "src/parser.tab.c"
     break;
 
   case 13: /* operand: STRING  */
-#line 75 "src/parser.y"
+#line 76 "src/parser.y"
              {
-        (yyval.node) = create_node((yyvsp[0].tok), NULL, NULL);
+        (yyval.node) = pgaa_create_node((yyvsp[0].tok), NULL, NULL);
     }
-#line 1170 "src/parser.tab.c"
+#line 1176 "src/parser.tab.c"
     break;
 
 
-#line 1174 "src/parser.tab.c"
+#line 1180 "src/parser.tab.c"
 
       default: break;
     }
@@ -1212,7 +1218,7 @@ yyreduce:
 yyerrlab:
   /* Make sure we have latest lookahead translation.  See comments at
      user semantic actions for why this is necessary.  */
-  yytoken = yychar == YYEMPTY ? YYSYMBOL_YYEMPTY : YYTRANSLATE (yychar);
+  yytoken = yychar == PGAA_YYEMPTY ? YYSYMBOL_YYEMPTY : YYTRANSLATE (yychar);
   /* If not already recovering from an error, report this error.  */
   if (!yyerrstatus)
     {
@@ -1225,17 +1231,17 @@ yyerrlab:
       /* If just tried and failed to reuse lookahead token after an
          error, discard it.  */
 
-      if (yychar <= YYEOF)
+      if (yychar <= PGAA_YYEOF)
         {
           /* Return failure if at end of input.  */
-          if (yychar == YYEOF)
+          if (yychar == PGAA_YYEOF)
             YYABORT;
         }
       else
         {
           yydestruct ("Error: discarding",
                       yytoken, &yylval, ctx);
-          yychar = YYEMPTY;
+          yychar = PGAA_YYEMPTY;
         }
     }
 
@@ -1337,7 +1343,7 @@ yyexhaustedlab:
 | yyreturnlab -- parsing is finished, clean up and return.  |
 `----------------------------------------------------------*/
 yyreturnlab:
-  if (yychar != YYEMPTY)
+  if (yychar != PGAA_YYEMPTY)
     {
       /* Make sure we have latest lookahead translation.  See comments at
          user semantic actions for why this is necessary.  */
@@ -1363,4 +1369,4 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 81 "src/parser.y"
+#line 82 "src/parser.y"

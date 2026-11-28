@@ -5,6 +5,8 @@
 #include "utils/elog.h"
 #include "utils/numeric.h"
 #include "catalog/pg_type_d.h"
+#include "utils/datum.h"
+#include "utils/lsyscache.h"
 #include "utilfunc.h"
 #include "predicate.h"
 
@@ -33,12 +35,47 @@ PG_FUNCTION_INFO_V1(array_all);
 PG_FUNCTION_INFO_V1(array_any);
 PG_FUNCTION_INFO_V1(array_none);
 
-#define ARITHM_ALLOWED_TYPES {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID}
-#define CMP_ALLOWED_TYPES {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID}
-#define CNT_ALLOWED_TYPES {INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID,\
-                            TEXTOID, VARCHAROID, BPCHAROID}
-#define PRED_ALLOWED_TYPES {INT2OID, INT4OID, INT8OID, NUMERICOID,\
-                            FLOAT4OID, FLOAT8OID, TEXTOID, VARCHAROID, BPCHAROID}
+static const Oid pgaa_arithm_allowed_types[] = {
+	INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID
+};
+
+static inline size_t
+pgaa_arithm_allowed_types_len(void)
+{
+	return lengthof(pgaa_arithm_allowed_types);
+}
+
+static const Oid pgaa_cmp_allowed_types[] = {
+	INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID
+};
+
+static inline size_t
+pgaa_cmp_allowed_types_len(void)
+{
+	return lengthof(pgaa_cmp_allowed_types);
+}
+
+static const Oid pgaa_cnt_allowed_types[] = {
+	INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID,
+	TEXTOID, VARCHAROID, BPCHAROID
+};
+
+static inline size_t
+pgaa_cnt_allowed_types_len(void)
+{
+	return lengthof(pgaa_cnt_allowed_types);
+}
+
+static const Oid pgaa_pred_allowed_types[] = {
+	INT2OID, INT4OID, INT8OID, NUMERICOID, FLOAT4OID, FLOAT8OID,
+	TEXTOID, VARCHAROID, BPCHAROID
+};
+
+static inline size_t
+pgaa_pred_allowed_types_len(void)
+{
+	return lengthof(pgaa_pred_allowed_types);
+}
 
 static void
 func_arg_check(const char *func_name, size_t ndim, Oid elemtype, const Oid *expected_types, size_t arr_len)
@@ -51,7 +88,7 @@ func_arg_check(const char *func_name, size_t ndim, Oid elemtype, const Oid *expe
 		pg_unreachable();
 	}
 
-	if (!type_is_expected(elemtype, expected_types, arr_len))
+	if (!pgaa_type_is_expected(elemtype, expected_types, arr_len))
 	{
 		ereport(ERROR,
 				(errcode(ERRCODE_ARRAY_SUBSCRIPT_ERROR),
@@ -64,7 +101,6 @@ Datum
 array_product(PG_FUNCTION_ARGS)
 {
 	ArrayType  *arr;
-	Oid const	expected_types[] = ARITHM_ALLOWED_TYPES;
 	ArrayIterator arr_it;
 	Datum		elem;
 	bool		is_null = false;
@@ -77,7 +113,7 @@ array_product(PG_FUNCTION_ARGS)
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	func_arg_check("array_product", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
+	func_arg_check("array_product", ARR_NDIM(arr), arr->elemtype, pgaa_arithm_allowed_types, pgaa_arithm_allowed_types_len());
 
 	arr_it = array_create_iterator(arr, 0, NULL);
 
@@ -93,7 +129,7 @@ array_product(PG_FUNCTION_ARGS)
 			pfree(res);
 			PG_RETURN_NULL();
 		}
-		tmp_elem = datum_to_numeric(elem, arr->elemtype);
+		tmp_elem = pgaa_datum_to_numeric(elem, arr->elemtype);
 #if PG_VERSION_NUM >= 190000
 		tmp_res = numeric_mul_safe(res, tmp_elem, NULL);
 #else
@@ -124,7 +160,6 @@ Datum
 array_sum(PG_FUNCTION_ARGS)
 {
 	ArrayType  *arr;
-	Oid const	expected_types[] = ARITHM_ALLOWED_TYPES;
 	ArrayIterator arr_it;
 	Datum		elem;
 	bool		is_null = false;
@@ -137,7 +172,7 @@ array_sum(PG_FUNCTION_ARGS)
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	func_arg_check("array_sum", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
+	func_arg_check("array_sum", ARR_NDIM(arr), arr->elemtype, pgaa_arithm_allowed_types, pgaa_arithm_allowed_types_len());
 
 	arr_it = array_create_iterator(arr, 0, NULL);
 
@@ -155,7 +190,7 @@ array_sum(PG_FUNCTION_ARGS)
 			PG_RETURN_NULL();
 		}
 
-		tmp_elem = datum_to_numeric(elem, arr->elemtype);
+		tmp_elem = pgaa_datum_to_numeric(elem, arr->elemtype);
 #if PG_VERSION_NUM >= 190000
 		tmp_res = numeric_add_safe(res, tmp_elem, NULL);
 #else
@@ -185,7 +220,6 @@ Datum
 array_avg(PG_FUNCTION_ARGS)
 {
 	ArrayType  *arr;
-	Oid const	expected_types[] = ARITHM_ALLOWED_TYPES;
 	ArrayIterator arr_it;
 	Datum		elem;
 	bool		is_null = false;
@@ -194,14 +228,14 @@ array_avg(PG_FUNCTION_ARGS)
 	Numeric		tmp_elem;
 	Numeric		tmp_res;
 	Numeric		final_res;
-	uint64_t	count;
+	uint64		count;
 #if PG_VERSION_NUM < 190000
 	bool		err = false;
 #endif
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	func_arg_check("array_avg", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
+	func_arg_check("array_avg", ARR_NDIM(arr), arr->elemtype, pgaa_arithm_allowed_types, pgaa_arithm_allowed_types_len());
 
 	if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0)
 	{
@@ -226,7 +260,7 @@ array_avg(PG_FUNCTION_ARGS)
 			PG_RETURN_NULL();
 		}
 
-		tmp_elem = datum_to_numeric(elem, arr->elemtype);
+		tmp_elem = pgaa_datum_to_numeric(elem, arr->elemtype);
 #if PG_VERSION_NUM >= 190000
 		tmp_res = numeric_add_safe(res, tmp_elem, NULL);
 #else
@@ -247,7 +281,7 @@ array_avg(PG_FUNCTION_ARGS)
 		res = tmp_res;
 		count++;
 	}
-	total = UInt64GetNumeric(count);
+	total = pgaa_uint64_get_numeric(count);
 #if PG_VERSION_NUM >= 190000
 	final_res = numeric_div_safe(res, total, NULL);
 #else
@@ -274,16 +308,16 @@ Datum
 array_min(PG_FUNCTION_ARGS)
 {
 	ArrayType  *arr;
-	Oid const	expected_types[] = CMP_ALLOWED_TYPES;
 	ArrayIterator arr_it;
 	Datum		elem;
 	Datum		res;
+	bool		typ_by_val;
+	int16		typ_len;
 	bool		is_null = false;
-	bool		is_first = true;
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	func_arg_check("array_min", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
+	func_arg_check("array_min", ARR_NDIM(arr), arr->elemtype, pgaa_cmp_allowed_types, pgaa_cmp_allowed_types_len());
 
 	if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0)
 	{
@@ -293,40 +327,32 @@ array_min(PG_FUNCTION_ARGS)
 
 	arr_it = array_create_iterator(arr, 0, NULL);
 
+	if (array_contains_nulls(arr))
+	{
+		PG_FREE_IF_COPY(arr, 0);
+		array_free_iterator(arr_it);
+		PG_RETURN_NULL();
+	}
 
+
+	array_iterate(arr_it, &elem, &is_null); /* После проверки
+											 * длины, это всегда
+											 * true, поскольку существует хотя бы
+											 * 1 элемент */
+	res = elem;
 	while (array_iterate(arr_it, &elem, &is_null))
 	{
-
-		if (is_null)
-		{
-			PG_FREE_IF_COPY(arr, 0);
-			array_free_iterator(arr_it);
-			PG_RETURN_NULL();
-		}
-
-		if (is_first)
-		{
-			res = elem;
-			is_first = false;
-			continue;
-		}
-
-		if (cmp_op(arr->elemtype, res, elem, PG_GET_COLLATION()) > 0)
+		if (pgaa_cmp_op(arr->elemtype, res, elem, PG_GET_COLLATION()) > 0)
 			res = elem;
 
 	}
+
 	array_free_iterator(arr_it);
 
-	/*
-	 * is_first = true, когда нет не NULL элементов в
-	 * массиве, либо len = 0
-	 */
+	get_typlenbyval(arr->elemtype, &typ_len, &typ_by_val);
+	res = datumCopy(res, typ_by_val, typ_len);
 
-	/*
-	 * таким образом, мы избегаем возврата неинициализированной переменной
-	 */
-	if (is_first)
-		PG_RETURN_NULL();
+	PG_FREE_IF_COPY(arr, 0);
 	PG_RETURN_DATUM(res);
 }
 
@@ -334,16 +360,16 @@ Datum
 array_max(PG_FUNCTION_ARGS)
 {
 	ArrayType  *arr;
-	Oid const	expected_types[] = CMP_ALLOWED_TYPES;
 	ArrayIterator arr_it;
 	Datum		elem;
 	Datum		res;
+	bool		typ_by_val;
+	int16		typ_len;
 	bool		is_null = false;
-	bool		is_first = true;
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	func_arg_check("array_max", ARR_NDIM(arr), arr->elemtype, expected_types, 6);
+	func_arg_check("array_max", ARR_NDIM(arr), arr->elemtype, pgaa_cmp_allowed_types, pgaa_cmp_allowed_types_len());
 
 	if (ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr)) == 0)
 	{
@@ -352,40 +378,28 @@ array_max(PG_FUNCTION_ARGS)
 	}
 
 	arr_it = array_create_iterator(arr, 0, NULL);
+	if (array_contains_nulls(arr))
+	{
+		PG_FREE_IF_COPY(arr, 0);
+		array_free_iterator(arr_it);
+		PG_RETURN_NULL();
+	}
+
+	array_iterate(arr_it, &elem, &is_null);
+	res = elem;
 	while (array_iterate(arr_it, &elem, &is_null))
 	{
-
-		if (is_null)
-		{
-			PG_FREE_IF_COPY(arr, 0);
-			array_free_iterator(arr_it);
-			PG_RETURN_NULL();
-		}
-
-		if (is_first)
-		{
-			res = elem;
-			is_first = false;
-			continue;
-		}
-
-		if (cmp_op(arr->elemtype, res, elem, PG_GET_COLLATION()) < 0)
+		if (pgaa_cmp_op(arr->elemtype, res, elem, PG_GET_COLLATION()) < 0)
 			res = elem;
 
 	}
 
 	array_free_iterator(arr_it);
 
-	/*
-	 * is_first = true, когда нет не NULL элементов в
-	 * массиве, либо len = 0
-	 */
+	get_typlenbyval(arr->elemtype, &typ_len, &typ_by_val);
+	res = datumCopy(res, typ_by_val, typ_len);
 
-	/*
-	 * таким образом, мы избегаем возврата неинициализированной переменной
-	 */
-	if (is_first)
-		PG_RETURN_NULL();
+	PG_FREE_IF_COPY(arr, 0);
 	PG_RETURN_DATUM(res);
 }
 
@@ -394,16 +408,15 @@ array_count(PG_FUNCTION_ARGS)
 {
 	ArrayType  *arr;
 	Datum		element;
-	Oid const	expected_types[] = CNT_ALLOWED_TYPES;
 	ArrayIterator arr_it;
 	Datum		elem;
-	uint64_t	result = 0;
+	uint64		result = 0;
 	bool		is_null = false;
 
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 	element = PG_GETARG_DATUM(1);
 
-	func_arg_check("array_count", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
+	func_arg_check("array_count", ARR_NDIM(arr), arr->elemtype, pgaa_cnt_allowed_types, pgaa_cnt_allowed_types_len());
 
 	arr_it = array_create_iterator(arr, 0, NULL);
 	while (array_iterate(arr_it, &elem, &is_null))
@@ -414,7 +427,7 @@ array_count(PG_FUNCTION_ARGS)
 			continue;
 		}
 
-		if (cmp_op(arr->elemtype, element, elem, PG_GET_COLLATION()) == 0)
+		if (pgaa_cmp_op(arr->elemtype, element, elem, PG_GET_COLLATION()) == 0)
 			result++;
 		if (result > INT32_MAX)
 			ereport(ERROR,
@@ -437,15 +450,12 @@ array_count_if(PG_FUNCTION_ARGS)
 	Datum		current_element;
 	ArrayIterator iterator;
 	bool		is_null;
-	uint64_t	result;
-	ParserCtx  *predicate_ctx;
-	Oid const	expected_types[] = PRED_ALLOWED_TYPES;
+	uint64		result;
+	PGAA_ParserCtx *predicate_ctx;
 
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
-		PG_RETURN_NULL();
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	func_arg_check("array_count_if", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
+	func_arg_check("array_count_if", ARR_NDIM(arr), arr->elemtype, pgaa_pred_allowed_types, pgaa_pred_allowed_types_len());
 
 	predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
 
@@ -453,7 +463,7 @@ array_count_if(PG_FUNCTION_ARGS)
 	result = 0;
 	iterator = array_create_iterator(arr, 0, NULL);
 
-	predicate_ctx = prepare_predicate(predicate);
+	predicate_ctx = pgaa_prepare_predicate(predicate);
 	if (predicate_ctx == NULL)
 	{
 		PG_FREE_IF_COPY(arr, 0);
@@ -469,7 +479,7 @@ array_count_if(PG_FUNCTION_ARGS)
 			continue;
 		}
 
-		if (execute_predicate(predicate_ctx, current_element, elemtype, collation))
+		if (pgaa_execute_predicate(predicate_ctx, current_element, elemtype, collation))
 			result++;
 		if (result > INT32_MAX)
 			ereport(ERROR,
@@ -480,7 +490,7 @@ array_count_if(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(arr, 0);
 	PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
 	array_free_iterator(iterator);
-	free_predicate(predicate_ctx);
+	pgaa_free_predicate(predicate_ctx);
 	PG_RETURN_INT32((int32) result);
 }
 
@@ -492,24 +502,21 @@ array_any(PG_FUNCTION_ARGS)
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
 	Datum		predicate;
-	ParserCtx  *predicate_ctx;
+	PGAA_ParserCtx *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;
 	bool		is_null;
-	Oid const	expected_types[] = PRED_ALLOWED_TYPES;
 
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
-		PG_RETURN_NULL();
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	func_arg_check("array_any", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
+	func_arg_check("array_any", ARR_NDIM(arr), arr->elemtype, pgaa_pred_allowed_types, pgaa_pred_allowed_types_len());
 
 	predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
 
 	elemtype = arr->elemtype;
 	iterator = array_create_iterator(arr, 0, NULL);
 
-	predicate_ctx = prepare_predicate(predicate);
+	predicate_ctx = pgaa_prepare_predicate(predicate);
 	if (predicate_ctx == NULL)
 	{
 		PG_FREE_IF_COPY(arr, 0);
@@ -524,12 +531,12 @@ array_any(PG_FUNCTION_ARGS)
 			continue;
 		}
 
-		if (execute_predicate(predicate_ctx, current_element, elemtype, collation))
+		if (pgaa_execute_predicate(predicate_ctx, current_element, elemtype, collation))
 		{
 			PG_FREE_IF_COPY(arr, 0);
 			PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
 			array_free_iterator(iterator);
-			free_predicate(predicate_ctx);
+			pgaa_free_predicate(predicate_ctx);
 			PG_RETURN_BOOL(true);
 		}
 	}
@@ -537,7 +544,7 @@ array_any(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(arr, 0);
 	PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
 	array_free_iterator(iterator);
-	free_predicate(predicate_ctx);
+	pgaa_free_predicate(predicate_ctx);
 	PG_RETURN_BOOL(false);
 }
 
@@ -548,26 +555,23 @@ array_all(PG_FUNCTION_ARGS)
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
 	Datum		predicate;
-	ParserCtx  *predicate_ctx;
+	PGAA_ParserCtx *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;
 	bool		is_null;
 	int			arr_len;
-	Oid const	expected_types[] = PRED_ALLOWED_TYPES;
 
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
-		PG_RETURN_NULL();
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 	arr_len = ArrayGetNItems(ARR_NDIM(arr), ARR_DIMS(arr));
 
-	func_arg_check("array_all", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
+	func_arg_check("array_all", ARR_NDIM(arr), arr->elemtype, pgaa_pred_allowed_types, pgaa_pred_allowed_types_len());
 
 	predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
 
 	elemtype = arr->elemtype;
 	iterator = array_create_iterator(arr, 0, NULL);
 
-	predicate_ctx = prepare_predicate(predicate);
+	predicate_ctx = pgaa_prepare_predicate(predicate);
 	if (predicate_ctx == NULL)
 	{
 		PG_FREE_IF_COPY(arr, 0);
@@ -584,12 +588,12 @@ array_all(PG_FUNCTION_ARGS)
 			continue;
 		}
 
-		if (!execute_predicate(predicate_ctx, current_element, elemtype, collation))
+		if (!pgaa_execute_predicate(predicate_ctx, current_element, elemtype, collation))
 		{
 			PG_FREE_IF_COPY(arr, 0);
 			PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
 			array_free_iterator(iterator);
-			free_predicate(predicate_ctx);
+			pgaa_free_predicate(predicate_ctx);
 			PG_RETURN_BOOL(false);
 		}
 	}
@@ -597,7 +601,7 @@ array_all(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(arr, 0);
 	PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
 	array_free_iterator(iterator);
-	free_predicate(predicate_ctx);
+	pgaa_free_predicate(predicate_ctx);
 	PG_RETURN_BOOL(true);
 }
 
@@ -608,24 +612,21 @@ array_none(PG_FUNCTION_ARGS)
 	Oid			collation = PG_GET_COLLATION();
 	Oid			elemtype;
 	Datum		predicate;
-	ParserCtx  *predicate_ctx;
+	PGAA_ParserCtx *predicate_ctx;
 	Datum		current_element;
 	ArrayIterator iterator;
 	bool		is_null;
-	Oid const	expected_types[] = PRED_ALLOWED_TYPES;
 
-	if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
-		PG_RETURN_NULL();
 	arr = PG_GETARG_ARRAYTYPE_P(0);
 
-	func_arg_check("array_none", ARR_NDIM(arr), arr->elemtype, expected_types, 9);
+	func_arg_check("array_none", ARR_NDIM(arr), arr->elemtype, pgaa_pred_allowed_types, pgaa_pred_allowed_types_len());
 
 	predicate = PointerGetDatum(PG_GETARG_TEXT_P(1));
 
 	elemtype = arr->elemtype;
 	iterator = array_create_iterator(arr, 0, NULL);
 
-	predicate_ctx = prepare_predicate(predicate);
+	predicate_ctx = pgaa_prepare_predicate(predicate);
 	if (predicate_ctx == NULL)
 	{
 		PG_FREE_IF_COPY(arr, 0);
@@ -641,12 +642,12 @@ array_none(PG_FUNCTION_ARGS)
 			continue;
 		}
 
-		if (execute_predicate(predicate_ctx, current_element, elemtype, collation))
+		if (pgaa_execute_predicate(predicate_ctx, current_element, elemtype, collation))
 		{
 			PG_FREE_IF_COPY(arr, 0);
 			PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
 			array_free_iterator(iterator);
-			free_predicate(predicate_ctx);
+			pgaa_free_predicate(predicate_ctx);
 			PG_RETURN_BOOL(false);
 		}
 	}
@@ -654,6 +655,6 @@ array_none(PG_FUNCTION_ARGS)
 	PG_FREE_IF_COPY(arr, 0);
 	PG_FREE_IF_COPY(DatumGetPointer(predicate), 1);
 	array_free_iterator(iterator);
-	free_predicate(predicate_ctx);
+	pgaa_free_predicate(predicate_ctx);
 	PG_RETURN_BOOL(true);
 }

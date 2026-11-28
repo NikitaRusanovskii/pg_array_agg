@@ -12,7 +12,7 @@
 #include "parser.tab.h"
 
 bool
-type_is_expected(Oid type_oid, const Oid *expected_types, uint32 len)
+pgaa_type_is_expected(Oid type_oid, const Oid *expected_types, uint32 len)
 {
 	for (uint32 i = 0; i < len; i++)
 	{
@@ -23,7 +23,7 @@ type_is_expected(Oid type_oid, const Oid *expected_types, uint32 len)
 }
 
 Numeric
-datum_to_numeric(Datum element, Oid type_oid)
+pgaa_datum_to_numeric(Datum element, Oid type_oid)
 {
 	Numeric		tmp;
 
@@ -51,23 +51,27 @@ datum_to_numeric(Datum element, Oid type_oid)
 		default:
 			ereport(ERROR,
 					(errcode(ERRCODE_WRONG_OBJECT_TYPE),
-					 errmsg("datum_to_numeric: The function does not support this OID: %d", type_oid)));
+					 errmsg("pgaa_datum_to_numeric: The function does not support this OID: %d", type_oid)));
 			pg_unreachable();
 	}
 	return tmp;
 }
 
-Numeric
-UInt64GetNumeric(uint64_t num)
-{
-	char		uint_buf[20] = {0};
+#define UINT64_BUF_LEN 21
 
-	sprintf(uint_buf, UINT64_FORMAT, num);
+Numeric
+pgaa_uint64_get_numeric(uint64 num)
+{
+	char		uint_buf[UINT64_BUF_LEN];
+
+	snprintf(uint_buf, UINT64_BUF_LEN, UINT64_FORMAT, num);
 	return DatumGetNumeric(DirectFunctionCall3(numeric_in, CStringGetDatum(uint_buf), ObjectIdGetDatum(InvalidOid), Int32GetDatum(-1)));
 }
 
+#undef UINT64_BUF_LEN
+
 Datum
-string_to_datum(const char *str, int len, Oid target_oid)
+pgaa_string_to_datum(const char *str, int len, Oid target_oid)
 {
 	Oid			input;
 	Oid			param;
@@ -81,7 +85,7 @@ string_to_datum(const char *str, int len, Oid target_oid)
 }
 
 int32
-cmp_op(Oid target_oid, Datum first, Datum second, Oid collid)
+pgaa_cmp_op(Oid target_oid, Datum first, Datum second, Oid collid)
 {
 	TypeCacheEntry *typentry;
 
@@ -89,7 +93,7 @@ cmp_op(Oid target_oid, Datum first, Datum second, Oid collid)
 	if (!OidIsValid(typentry->cmp_proc))
 		ereport(ERROR,
 				(errcode(ERRCODE_UNDEFINED_FUNCTION),
-				 errmsg("cmp_op: Invalid oid of cmp func")));
+				 errmsg("pgaa_cmp_op: Invalid oid of cmp func")));
 
 	return DatumGetInt32(FunctionCall2Coll(&typentry->cmp_proc_finfo, collid, first, second));
 
@@ -127,14 +131,14 @@ datum_is_zero(Datum value, Oid type_oid, Oid collid)
 					 errmsg("datum_is_zero: incorrect datatype")));
 			pg_unreachable();
 	}
-	res = cmp_op(type_oid, value, zero, collid) == 0;
+	res = pgaa_cmp_op(type_oid, value, zero, collid) == 0;
 	if (type_oid == NUMERICOID)
 		pfree(DatumGetPointer(zero));
 	return res;
 }
 
 Datum
-mod_op(Oid target_oid, Datum first, Datum second, Oid collid)
+pgaa_mod_op(Oid target_oid, Datum first, Datum second, Oid collid)
 {
 	Datum		result;
 
@@ -183,7 +187,7 @@ mod_op(Oid target_oid, Datum first, Datum second, Oid collid)
 		default:
 			ereport(ERROR,
 					(errcode(ERRCODE_WRONG_OBJECT_TYPE),
-					 errmsg("mod_op: wrong oid: %d", target_oid)));
+					 errmsg("pgaa_mod_op: wrong oid: %d", target_oid)));
 			pg_unreachable();
 	}
 	return result;

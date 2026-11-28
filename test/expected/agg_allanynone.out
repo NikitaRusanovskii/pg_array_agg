@@ -119,15 +119,15 @@ SELECT array_all(ARRAY[1, 2, 3], NULL::text);
 SELECT array_all(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 ERROR:  array_all: Invalid ndim of array: 3
 SELECT array_all(ARRAY['a', 'b']::text[], 'x > ''a''');
-ERROR:  scaner: invalid token: '
+ERROR:  pgaa_scaner: invalid token: '
 FATAL STRING: x > 'a'
 SELECT array_all(ARRAY[1, 2, 3], 'x @@@ 1');
-ERROR:  scaner: invalid token: @
+ERROR:  pgaa_scaner: invalid token: @
 FATAL STRING: x @@@ 1
 SELECT array_all(ARRAY[1, 2, 3], 'x ==');
 ERROR:  predicate parser: syntax error
 SELECT array_all(ARRAY[1, 2, 3], 'x == ''abc''');
-ERROR:  scaner: invalid token: '
+ERROR:  pgaa_scaner: invalid token: '
 FATAL STRING: x == 'abc'
 SELECT array_all(ARRAY[1, 2, 3], 'x % 0 = 0');
 ERROR:  process: division by zero
@@ -254,15 +254,15 @@ SELECT array_any(ARRAY[1, 2, 3], NULL::text);
 SELECT array_any(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 ERROR:  array_any: Invalid ndim of array: 3
 SELECT array_any(ARRAY['a', 'b']::text[], 'x > ''a''');
-ERROR:  scaner: invalid token: '
+ERROR:  pgaa_scaner: invalid token: '
 FATAL STRING: x > 'a'
 SELECT array_any(ARRAY[1, 2, 3], 'x @@@ 1');
-ERROR:  scaner: invalid token: @
+ERROR:  pgaa_scaner: invalid token: @
 FATAL STRING: x @@@ 1
 SELECT array_any(ARRAY[1, 2, 3], 'x ==');
 ERROR:  predicate parser: syntax error
 SELECT array_any(ARRAY[1, 2, 3], 'x == ''abc''');
-ERROR:  scaner: invalid token: '
+ERROR:  pgaa_scaner: invalid token: '
 FATAL STRING: x == 'abc'
 SELECT array_any(ARRAY[1, 2, 3], 'x % 0 = 0');
 ERROR:  process: division by zero
@@ -389,15 +389,15 @@ SELECT array_none(ARRAY[1, 2, 3], NULL::text);
 SELECT array_none(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 ERROR:  array_none: Invalid ndim of array: 3
 SELECT array_none(ARRAY['a', 'b']::text[], 'x > ''a''');
-ERROR:  scaner: invalid token: '
+ERROR:  pgaa_scaner: invalid token: '
 FATAL STRING: x > 'a'
 SELECT array_none(ARRAY[1, 2, 3], 'x @@@ 1');
-ERROR:  scaner: invalid token: @
+ERROR:  pgaa_scaner: invalid token: @
 FATAL STRING: x @@@ 1
 SELECT array_none(ARRAY[1, 2, 3], 'x ==');
 ERROR:  predicate parser: syntax error
 SELECT array_none(ARRAY[1, 2, 3], 'x == ''abc''');
-ERROR:  scaner: invalid token: '
+ERROR:  pgaa_scaner: invalid token: '
 FATAL STRING: x == 'abc'
 SELECT array_none(ARRAY[1, 2, 3], 'x % 0 = 0');
 ERROR:  process: division by zero

@@ -7,18 +7,19 @@
     #include "parser_util.h"
     #include "utilfunc.h"
     #include "re2c_adapt.h"
-    int yylex(YYSTYPE *yylval_param, ParserCtx *ctx);
-    void yyerror(ParserCtx *ctx, const char *s);
+    int pgaa_yylex(PGAA_YYSTYPE *yylval_param, PGAA_ParserCtx *ctx);
+    void pgaa_yyerror(PGAA_ParserCtx *ctx, const char *s);
 %}
 
 %define api.pure full
+%define api.prefix {pgaa_yy}
 
-%parse-param { ParserCtx *ctx }
-%lex-param { ParserCtx *ctx }
+%parse-param { PGAA_ParserCtx *ctx }
+%lex-param { PGAA_ParserCtx *ctx }
 
 %union {
-    Token tok;
-    ASTNode *node;
+    PGAA_Token tok;
+    PGAA_ASTNode *node;
 }
 %token <tok> VARIABLE
 %token <tok> NUMBER
@@ -44,14 +45,14 @@
 
 predicate:
     VARIABLE cmp_op operand {
-        ASTNode *var = create_node($1, NULL, NULL);
-        $$ = create_node($2, var, $3);
+        PGAA_ASTNode *var = pgaa_create_node($1, NULL, NULL);
+        $$ = pgaa_create_node($2, var, $3);
         ctx->result = $$;
     }
     | VARIABLE mod_op operand cmp_op operand {
-        ASTNode *var = create_node($1, NULL, NULL);
-        ASTNode *op1 = create_node($2, var, $3);
-        $$ = create_node($4, op1, $5);
+        PGAA_ASTNode *var = pgaa_create_node($1, NULL, NULL);
+        PGAA_ASTNode *op1 = pgaa_create_node($2, var, $3);
+        $$ = pgaa_create_node($4, op1, $5);
         ctx->result = $$;
     }
 ;
@@ -70,10 +71,10 @@ mod_op:
 
 operand:
     NUMBER {
-        $$ = create_node($1, NULL, NULL);
+        $$ = pgaa_create_node($1, NULL, NULL);
     }
     | STRING {
-        $$ = create_node($1, NULL, NULL);
+        $$ = pgaa_create_node($1, NULL, NULL);
     }
 ;
     

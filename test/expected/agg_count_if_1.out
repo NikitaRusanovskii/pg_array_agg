@@ -125,15 +125,15 @@ SELECT array_count_if(ARRAY[1, 2, 3], NULL::text);
 SELECT array_count_if(ARRAY[[[1, 2]], [[3, 4]]], 'x == 1');
 ERROR:  array_count_if: Invalid ndim of array: 3
 SELECT array_count_if(ARRAY['a', 'b']::text[], 'x > ''a''');
-ERROR:  scaner: invalid token: '
+ERROR:  pgaa_scaner: invalid token: '
 FATAL STRING: x > 'a'
 SELECT array_count_if(ARRAY[1, 2, 3], 'x @@@ 1');
-ERROR:  scaner: invalid token: @
+ERROR:  pgaa_scaner: invalid token: @
 FATAL STRING: x @@@ 1
 SELECT array_count_if(ARRAY[1, 2, 3], 'x ==');
 ERROR:  predicate parser: syntax error
 SELECT array_count_if(ARRAY[1, 2, 3], 'x == ''abc''');
-ERROR:  scaner: invalid token: '
+ERROR:  pgaa_scaner: invalid token: '
 FATAL STRING: x == 'abc'
 SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
 ERROR:  process: division by zero

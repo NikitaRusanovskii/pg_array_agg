@@ -35,31 +35,39 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_SRC_PARSER_TAB_H_INCLUDED
-# define YY_YY_SRC_PARSER_TAB_H_INCLUDED
+#ifndef YY_PGAA_YY_SRC_PARSER_TAB_H_INCLUDED
+# define YY_PGAA_YY_SRC_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
-#ifndef YYDEBUG
-# define YYDEBUG 0
-#endif
+#ifndef PGAA_YYDEBUG
+# if defined YYDEBUG
 #if YYDEBUG
-extern int yydebug;
+#   define PGAA_YYDEBUG 1
+#  else
+#   define PGAA_YYDEBUG 0
+#  endif
+# else /* ! defined YYDEBUG */
+#  define PGAA_YYDEBUG 0
+# endif /* ! defined YYDEBUG */
+#endif  /* ! defined PGAA_YYDEBUG */
+#if PGAA_YYDEBUG
+extern int pgaa_yydebug;
 #endif
 /* "%code requires" blocks.  */
 #line 1 "src/parser.y"
 
     #include "parser_util.h"
 
-#line 53 "src/parser.tab.h"
+#line 61 "src/parser.tab.h"
 
 /* Token kinds.  */
-#ifndef YYTOKENTYPE
-# define YYTOKENTYPE
-  enum yytokentype
+#ifndef PGAA_YYTOKENTYPE
+# define PGAA_YYTOKENTYPE
+  enum pgaa_yytokentype
   {
-    YYEMPTY = -2,
-    YYEOF = 0,                     /* "end of file"  */
-    YYerror = 256,                 /* error  */
-    YYUNDEF = 257,                 /* "invalid token"  */
+    PGAA_YYEMPTY = -2,
+    PGAA_YYEOF = 0,                /* "end of file"  */
+    PGAA_YYerror = 256,            /* error  */
+    PGAA_YYUNDEF = 257,            /* "invalid token"  */
     VARIABLE = 258,                /* VARIABLE  */
     NUMBER = 259,                  /* NUMBER  */
     STRING = 260,                  /* STRING  */
@@ -72,30 +80,30 @@ extern int yydebug;
     LEE = 267,                     /* LEE  */
     MOD = 268                      /* MOD  */
   };
-  typedef enum yytokentype yytoken_kind_t;
+  typedef enum pgaa_yytokentype pgaa_yytoken_kind_t;
 #endif
 
 /* Value type.  */
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-union YYSTYPE
+#if ! defined PGAA_YYSTYPE && ! defined PGAA_YYSTYPE_IS_DECLARED
+union PGAA_YYSTYPE
 {
-#line 19 "src/parser.y"
+#line 20 "src/parser.y"
 
-    Token tok;
-    ASTNode *node;
+    PGAA_Token tok;
+    PGAA_ASTNode *node;
 
-#line 88 "src/parser.tab.h"
+#line 96 "src/parser.tab.h"
 
 };
-typedef union YYSTYPE YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define YYSTYPE_IS_DECLARED 1
+typedef union PGAA_YYSTYPE PGAA_YYSTYPE;
+# define PGAA_YYSTYPE_IS_TRIVIAL 1
+# define PGAA_YYSTYPE_IS_DECLARED 1
 #endif
 
 
 
 
-int yyparse (ParserCtx *ctx);
+int pgaa_yyparse (PGAA_ParserCtx *ctx);
 
 
-#endif /* !YY_YY_SRC_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_PGAA_YY_SRC_PARSER_TAB_H_INCLUDED  */

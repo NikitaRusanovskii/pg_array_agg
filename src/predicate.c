@@ -10,7 +10,7 @@
 #include "scaner.h"
 #include "utilfunc.h"
 /*
- * void dfs_print(ASTNode *node)
+ * void dfs_print(PGAA_ASTNode *node)
  * {
  * if (node == NULL)
  * return;
@@ -18,23 +18,23 @@
  * dfs_print(node->left);
  * dfs_print(node->right);
  *
- * Token t = node->value;
- * printf("%.*s\n", t.lenght, t.token);
+ * PGAA_Token t = node->value;
+ * printf("%.*s\n", t.length, t.token);
  * }
  */
 
 static int32
-lexical_analyze(char *predicate_string, int32 len, Token *result, int32 token_len)
+lexical_analyze(char *predicate_string, int32 len, PGAA_Token * result, int32 token_len)
 {
-	return scaner(predicate_string, len, result, token_len);
+	return pgaa_scaner(predicate_string, len, result, token_len);
 }
 
-ParserCtx *
-prepare_predicate(Datum predicate_text)
+PGAA_ParserCtx *
+pgaa_prepare_predicate(Datum predicate_text)
 {
 	int			yyparse_res;
 	int32		predicate_len;
-	ParserCtx  *ctx = (ParserCtx *) palloc0(sizeof(ParserCtx));
+	PGAA_ParserCtx *ctx = (PGAA_ParserCtx *) palloc0(sizeof(PGAA_ParserCtx));
 	text	   *t = DatumGetTextPP(predicate_text);
 
 	predicate_len = VARSIZE_ANY_EXHDR(t);
@@ -43,7 +43,7 @@ prepare_predicate(Datum predicate_text)
 	if ((Pointer) t != DatumGetPointer(predicate_text))
 		pfree(t);				/* по сути, развёрнутый
 								 * PG_FREE_IF_COPY */
-	ctx->tokens = palloc0(sizeof(Token) * (predicate_len + 2));
+	ctx->tokens = palloc0(sizeof(PGAA_Token) * (predicate_len + 2));
 	if (predicate_len == 0)
 	{
 		/* это значит, что строка predicate = "" */
@@ -65,17 +65,17 @@ prepare_predicate(Datum predicate_text)
 		pfree(ctx);
 		return 0;
 	}
-	yyparse_res = yyparse(ctx);
+	yyparse_res = pgaa_yyparse(ctx);
 	if (yyparse_res == 1)
 	{
 		ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
-																		"prepare_predicate: invalid syntax"));
+																		"pgaa_prepare_predicate: invalid syntax"));
 		pg_unreachable();
 	}
 	if (yyparse_res == 2)
 	{
 		ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
-																		"prepare_predicate: memory allocate error"));
+																		"pgaa_prepare_predicate: memory allocate error"));
 		pg_unreachable();
 	}
 	ctx->execution_ctx = AllocSetContextCreate(
@@ -94,7 +94,7 @@ prepare_predicate(Datum predicate_text)
 }
 
 static Datum
-dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid, MemoryContext cache_ctx)
+dfs_execute(PGAA_ASTNode * node, Datum element, Oid toid, Oid collid, MemoryContext cache_ctx)
 {
 
 #define UNI_CMP_OP(op) do { if (node->left == NULL || node->right == NULL) { ereport( \
@@ -102,7 +102,7 @@ dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid, MemoryContext ca
                 errcode(ERRCODE_INVALID_PARAMETER_VALUE), \
                 errmsg("dfs_execute: bad ast") \
             ); pg_unreachable(); } \
-            return BoolGetDatum(cmp_op(toid, left_res, right_res, collid) op 0); } while(0)
+            return BoolGetDatum(pgaa_cmp_op(toid, left_res, right_res, collid) op 0); } while(0)
 
 	Datum		left_res = (Datum) 0;
 	Datum		right_res = (Datum) 0;
@@ -127,7 +127,7 @@ dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid, MemoryContext ca
 			else
 			{
 				old_ctx = MemoryContextSwitchTo(cache_ctx);
-				node->raw = string_to_datum(node->value.token, node->value.lenght, toid);
+				node->raw = pgaa_string_to_datum(node->value.token, node->value.length, toid);
 				MemoryContextSwitchTo(old_ctx);
 				node->is_cached = true;
 				return node->raw;
@@ -154,7 +154,7 @@ dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid, MemoryContext ca
 						errmsg("dfs_execute: bad ast"));
 				pg_unreachable();
 			}
-			return mod_op(toid, left_res, right_res, collid);
+			return pgaa_mod_op(toid, left_res, right_res, collid);
 		default:
 			ereport(
 					ERROR,
@@ -166,7 +166,7 @@ dfs_execute(ASTNode *node, Datum element, Oid toid, Oid collid, MemoryContext ca
 }
 
 bool
-execute_predicate(ParserCtx *ctx, Datum element, Oid target_oid, Oid collid)
+pgaa_execute_predicate(PGAA_ParserCtx * ctx, Datum element, Oid target_oid, Oid collid)
 {
 	bool		result;
 	MemoryContext old_ctx;
@@ -175,28 +175,28 @@ execute_predicate(ParserCtx *ctx, Datum element, Oid target_oid, Oid collid)
 	{
 		ereport(ERROR,
 				errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				errmsg("execute_predicate: ctx == NULL"));
+				errmsg("pgaa_execute_predicate: ctx == NULL"));
 		pg_unreachable();
 	}
 	if (ctx->predicate_string == NULL)
 	{
 		ereport(ERROR,
 				errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				errmsg("execute_predicate: predicate_string == NULL"));
+				errmsg("pgaa_execute_predicate: predicate_string == NULL"));
 		pg_unreachable();
 	}
 	if (ctx->result == NULL)
 	{
 		ereport(ERROR,
 				errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				errmsg("execute_predicate: AST == NULL"));
+				errmsg("pgaa_execute_predicate: AST == NULL"));
 		pg_unreachable();
 	}
 	if (ctx->tokens == NULL)
 	{
 		ereport(ERROR,
 				errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				errmsg("execute_predicate: tokens == NULL"));
+				errmsg("pgaa_execute_predicate: tokens == NULL"));
 		pg_unreachable();
 	}
 	old_ctx = MemoryContextSwitchTo(ctx->execution_ctx);
@@ -206,11 +206,11 @@ execute_predicate(ParserCtx *ctx, Datum element, Oid target_oid, Oid collid)
 	return result;
 }
 void
-free_predicate(ParserCtx *ctx)
+pgaa_free_predicate(PGAA_ParserCtx * ctx)
 {
 	pfree(ctx->tokens);
 	pfree(ctx->predicate_string);
-	free_ast(ctx->result);
+	pgaa_free_ast(ctx->result);
 	MemoryContextDelete(ctx->execution_ctx);
 	MemoryContextDelete(ctx->cache);
 	pfree(ctx);

@@ -3,19 +3,19 @@
 #include "utils/lsyscache.h"
 #include "parser_util.h"
 
-Token
-construct_token(TokenType type, const char *token, int32 lenght)
+PGAA_Token
+pgaa_construct_token(PGAA_TokentType type, const char *token, int32 length)
 {
-	return (Token)
+	return (PGAA_Token)
 	{
-		type, token, lenght
+		type, token, length
 	};
 }
 
-ASTNode *
-create_node(Token value, ASTNode *left, ASTNode *right)
+PGAA_ASTNode *
+pgaa_create_node(PGAA_Token value, PGAA_ASTNode * left, PGAA_ASTNode * right)
 {
-	ASTNode    *n = (ASTNode *) palloc0(sizeof(ASTNode));
+	PGAA_ASTNode *n = (PGAA_ASTNode *) palloc0(sizeof(PGAA_ASTNode));
 
 	n->value = value;
 	n->left = left;
@@ -23,7 +23,7 @@ create_node(Token value, ASTNode *left, ASTNode *right)
 	return n;
 }
 int
-free_ast(ASTNode *root)
+pgaa_free_ast(PGAA_ASTNode * root)
 {
 	List	   *l = NULL;
 
@@ -32,7 +32,7 @@ free_ast(ASTNode *root)
 	l = lappend(l, root);
 	while (l != NIL)
 	{
-		ASTNode    *tmp = (ASTNode *) linitial(l);
+		PGAA_ASTNode *tmp = (PGAA_ASTNode *) linitial(l);
 
 		l = list_delete_first(l);
 		if (tmp->left)
@@ -46,21 +46,21 @@ free_ast(ASTNode *root)
 }
 
 
-Token
-get_next(ParserCtx *ctx)
+PGAA_Token
+pgaa_get_next(PGAA_ParserCtx * ctx)
 {
-	Token		res;
+	PGAA_Token	res;
 
 	if (ctx == NULL)
 	{
 		ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
-																		"get_next: ctx is NULL"));
+																		"pgaa_get_next: ctx is NULL"));
 		pg_unreachable();
 	}
 	if (ctx->token_pos >= ctx->token_len)
 	{
 		ereport(ERROR, errcode(ERRCODE_INVALID_PARAMETER_VALUE), errmsg(
-																		"get_next: token_pos >= token_len"));
+																		"pgaa_get_next: token_pos >= token_len"));
 		pg_unreachable();
 	}
 	res = ctx->tokens[ctx->token_pos++];

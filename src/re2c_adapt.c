@@ -4,15 +4,15 @@
 #include "re2c_adapt.h"
 
 int
-yylex(YYSTYPE *yylval_param, ParserCtx *ctx)
+pgaa_yylex(PGAA_YYSTYPE * yylval_param, PGAA_ParserCtx * ctx)
 {
-	Token		t;
+	PGAA_Token	t;
 
 	if (yylval_param == NULL || ctx == NULL)
 	{
 		/* erep */
 	}
-	t = get_next(ctx);
+	t = pgaa_get_next(ctx);
 	switch (t.type)
 	{
 		case T_VARIABLE:
@@ -51,12 +51,12 @@ yylex(YYSTYPE *yylval_param, ParserCtx *ctx)
 		case T_END:
 			return 0;
 		default:
-			return YYUNDEF;
+			return PGAA_YYUNDEF;
 	}
 }
 
 void
-yyerror(ParserCtx *ctx, const char *message)
+pgaa_yyerror(PGAA_ParserCtx * ctx, const char *message)
 {
 	ereport(ERROR,
 			(errcode(ERRCODE_SYNTAX_ERROR),
