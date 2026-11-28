@@ -625,7 +625,7 @@ SELECT array_count_if(
     ARRAY['a', 'b']::text[],
     'x % 2 = 0'
 );
-ERROR: datum_is_zero: incorrect datatype
+ERROR:  datum_is_zero: incorrect datatype
 SELECT array_count_if(ARRAY[1, 2, 3], 'x % 0 = 0');
 ERROR:  process: division by zero
 SELECT array_count_if(ARRAY[]::int[], 'x > 0');
